@@ -89,7 +89,7 @@ bootCImic <- function(data,
     int_pctl(. , mic_roc, alpha = 0.05)
   bootCI <- rbind(bootCI, boot_roc)
  }
-  if("pred" %in% mic){
+  if("predict" %in% mic){
   boot_pred <-
     boots %>%
     mutate(mic_pred = map(splits, boot_mic_pred, x = x, y = y, tr = tr)) %>%
