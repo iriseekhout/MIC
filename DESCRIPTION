@@ -1,9 +1,9 @@
 Package: MIC
 Title: Minimal Important Change
-Version: 0.0.1
+Version: 0.1.0
 Authors@R: 
     c(person(given = "Iris",
-           family = "Eekout",
+           family = "Eekhout",
            role = c("aut", "cre"),
            email = "iris.eekhout@tno.nl"),
            person(given = "Berend",
