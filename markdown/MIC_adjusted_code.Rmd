@@ -1,0 +1,344 @@
+---
+title: "adjusted MIC"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+# R-code to estimate the adjusted MIC, predictive MIC and ROC-based MIC  
+
+This code simulates an example data set with 10 items that are measured at two time points. 
+
+```{r}
+# Acquire packages
+library(mirt)     # for simulating data
+library(lavaan)   # for estimating the transition ratings reliability
+library(pROC)     # for estimating ROC-based MIC
+``` 
+
+## Simulate dataset using 'mirt'
+
+### Gernerate a set of IRT item parameters
+
+```{r}
+
+set.seed(12345)
+
+b2  <- c(-0.8, -0.8, -0.4, -0.4, 0, 0, 0.4, 0.4, 0.8, 0.8)
+bc <- b2/4
+b1 <- b2 - 1 + sample(bc)
+b3 <- b2 + 1 + sample(bc)
+a1 <- sample( 1+b2/2 )
+
+( cf.simb <- data.frame(a1,b1,b2,b3) )
+``` 
+
+
+### Transform b-parameters to d-parameters (mirt works with d-parameters)
+
+difficulty (b) = easiness (d) / -a
+
+```{r}
+cf.sim <- cf.simb
+
+colnames(cf.sim) <- c("a1","d1","d2","d3")
+
+cf.sim$d1 <- -cf.simb$b1*cf.sim$a1
+cf.sim$d2 <- -cf.simb$b2*cf.sim$a1
+cf.sim$d3 <- -cf.simb$b3*cf.sim$a1
+round(cf.sim, 3)
+round(colMeans(cf.sim), 3)
+```
+
+
+
+### Create theta T1 and dataset 1 (baseline)
+
+```{r}
+a1 <- as.matrix(cf.sim[ , 1])
+d1 <- as.matrix(cf.sim[ , -1])
+
+N <- 1000         # sample size
+prop.imp <- 0.3   # proportion improved
+mn.imic  <- 0.5   # mean individual MICs in terms of theta change
+
+tet1s <- rnorm(N, 0, 1)   # simulate theta T1
+tet1s <- as.matrix(tet1s)
+
+set.seed( sample(10000:20000,1) )
+
+dat1 <- simdata(a1, d1, N, itemtype="graded", Theta=tet1s)
+dat1 <- as.data.frame(dat1)
+
+xo1 <- rowSums(dat1)   # This is the baseline test (sum) score
+```
+
+### Create theta change
+
+```{r}
+rt1ch <- -0.5            # correlation between theta T1 and theta change
+tetchs <- rt1ch*tet1s + sqrt(1-rt1ch^2)*rnorm(N, mean(tet1s), sd(tet1s))
+cor(tet1s,tetchs)
+
+tetchs <- tetchs - mean(tetchs)         # makes mean = 0
+tetchs <- (tetchs/sd(tetchs))*1         # makes SD = 1
+
+( qtl <- quantile(tetchs, prob=(1-prop.imp)) )
+( mean.tetchs <- mn.imic - qtl )        # Estimate mean theta change to get
+# the desired proportion improved
+tetchs <- tetchs + mean.tetchs          # transform mean of tetchs
+```
+
+### Create theta T2 and dataset 2  (follow-up)
+
+```{r}
+tet2s <- as.matrix(tet1s + tetchs)     # theta T2
+
+cor(tet1s, tet2s)   
+
+set.seed( sample(30000:40000,1) )
+
+dat2 <- simdata(a1, d1, N, itemtype="graded", Theta=tet2s)
+dat2 <- as.data.frame(dat2)
+```
+
+### Insert error in transition ratings
+
+```{r}
+
+rel.trat <- 0.5   # reliability of the perceived change/transition rating
+
+( sd.ch.error <- sqrt(((1-rel.trat)/rel.trat)*sd(tetchs)^2) )
+tetch.percv <- tetchs + rnorm(N, 0, sd.ch.error)  # perceived change
+```
+
+### Create iMIC distribution
+```{r}
+imic <- rnorm(N, mn.imic, 0.1*mn.imic)
+```
+
+### create dichotomous transition ratings
+
+```{r}
+trat <- numeric(N)                         
+trat[tetch.percv > imic] <- 1   
+mean(trat)                           # proportion improved based on perceived change
+```
+
+### Create dataset
+
+```{r}
+org <- data.frame(dat1, dat2, trat)
+head(org)
+nitems = 10     # Provide the number of items in the scale
+
+## Simplify/standardize the item names
+names(org)[1:nitems] <- paste0('v1', '_', 1:nitems)
+names(org)[(nitems+1):(2*nitems)] <- paste0('v2', '_', 1:nitems)
+names(org)[2*nitems+1] <- "trat"
+names(org)
+
+## copy original data into a workfile (dat)
+dat <- org
+head(dat)
+
+```
+
+
+
+
+## Estimate TR reliability with lavaan
+
+### Specify the factor model
+
+A factor for each time point, with correlated errors over time.
+
+```{r}
+model <- ' 
+   # Factors
+   F1 =~ a1*v1_1+a2*v1_2+a3*v1_3+a4*v1_4+a5*v1_5+a6*v1_6+a7*v1_7+a8*v1_8+
+         a9*v1_9+a10*v1_10+trat
+   F2 =~ a1*v2_1+a2*v2_2+a3*v2_3+a4*v2_4+a5*v2_5+a6*v2_6+a7*v2_7+a8*v2_8+
+         a9*v2_9+a10*v2_10+trat
+   
+   # Correlated errors over time
+   v1_1 ~~ v2_1
+   v1_2 ~~ v2_2
+   v1_3 ~~ v2_3
+   v1_4 ~~ v2_4
+   v1_5 ~~ v2_5
+   v1_6 ~~ v2_6
+   v1_7 ~~ v2_7
+   v1_8 ~~ v2_8
+   v1_9 ~~ v2_9
+   v1_10 ~~ v2_10
+   '
+```
+
+### Fit the confirmatory factor analysis
+
+```{r}
+fit <- cfa(model, data=dat, ordered=names(dat), 
+           test="mean.var.adjusted")
+
+fitMeasures(fit, fit.measures = c("cfi.scaled","tli.scaled","rmsea.scaled",
+                                  "rmsea.ci.lower.scaled","rmsea.ci.upper.scaled","rmsea.pvalue.scaled",
+                                  "srmr") )
+
+MI <- modificationIndices(fit)
+MI[MI$sepc.lv>0.3,]
+
+
+```
+
+*Note: Check the model fit. If necessary improve model fit by allowing correlated errors cross-sectionally (e.g., `v1_1 ~~ v1_2, v2_1 ~~ v2_2`)*
+
+### Reliability of TR
+
+```{r}
+pe <- parameterEstimates(fit, standardized=T, rsquare=T)
+( rel.trat <- pe$est[pe$lhs=="trat" & pe$op=="r2"] )   # Reliability TR
+```
+
+
+## Estimate MICs
+
+### ROC-based MIC
+
+```{r}
+xo1 <- rowSums(dat[,1:nitems])                 # sumscore T1
+xo2 <- rowSums(dat[,(nitems+1):(2*nitems)])    # sumscore T2
+dat$xoc <- xo2 - xo1                           # change score
+
+( q <- mean(dat$trat) )            # q = proportion improved (perceived)
+( p <- log(q/(1-q)) )              # p = logodds(pre)
+
+( cor.trat.xoc <- cor(dat$trat, dat$xoc) )  # correlation anchor-change
+
+## Do ROC analysis
+
+rocobj <- roc(dat$trat, dat$xoc, quiet = TRUE)
+
+( mic.roc <- coords(rocobj, x="best", input="threshold", ret="threshold", 
+                    best.method="youden", transpose = TRUE) ) 
+
+```
+
+
+### predicted MIC
+
+Apply a logistic regression for both the MIC(predicted) and MIC(adjusted)
+
+```{r}
+
+mylogit <- glm(trat ~ xoc, data = dat, family = "binomial")
+
+C <- coef(mylogit)[1]                 # intercept coefficient C
+B <- coef(mylogit)[2]                 # regression coefficient B
+
+( mic.pred <- (p-C)/B )               # MIC(predicted) 
+```
+
+
+### Adjusted MIC
+
+```{r}
+rf <- (0.8/rel.trat - 0.5) * sd(dat$xoc) * cor.trat.xoc
+( mic.adj <- mic.pred - rf * p )
+
+```
+
+
+## Bootstrap confidence intervals
+
+### Bootstrap code and application
+
+```{r}
+
+nboot    <- 1000                # number of bootstrap samples
+mic.roc  <- numeric(nboot)
+mic.pred <- numeric(nboot)
+mic.adj  <- numeric(nboot)
+boot <- data.frame(mic.roc, mic.pred, mic.adj)
+
+start.time <- Sys.time()
+
+for(i in 1:nboot) {
+  
+  #print(i)
+  
+  dat <- org[sample(1:dim(dat)[1], dim(dat)[1], replace=TRUE),]
+  
+  ### Estimate TR reliability with lavaan
+  
+  # model is already defined in the previous section 
+  
+  fit <- cfa(model, data=dat, ordered=names(dat), 
+             test="mean.var.adjusted")
+  
+  pe <- parameterEstimates(fit, standardized=T, rsquare=T)
+  ( rel.trat <- pe$est[pe$lhs=="trat" & pe$op=="r2"] )   # Reliability TR
+  
+  ### Estimate MICs
+  
+  xo1 <- rowSums(dat[,1:nitems])                 # sumscore T1
+  xo2 <- rowSums(dat[,(nitems+1):(2*nitems)])    # sumscore T2
+  dat$xoc <- xo2 - xo1
+  
+  ( q <- mean(dat$trat) )            # q = proportion improved (perceived)
+  ( p <- log(q/(1-q)) )              # p = logodds(pre)
+  
+  ( cor.trat.xoc <- cor(dat$trat, dat$xoc) )  # correlation anchor-change
+  
+  ## Do ROC analysis
+  
+  rocobj <- roc(dat$trat, dat$xoc, quiet = TRUE)
+  
+  mic.roc <- coords(rocobj, x="best", input="threshold", ret="threshold", 
+                    best.method="youden", transpose = TRUE) 
+  
+  ( boot$mic.roc[i] <- mic.roc[sample(length(mic.roc),1)] )
+  
+  
+  ## apply logistic regression and calculate parameters and MIC(pred)
+  
+  mylogit <- glm(trat ~ xoc, data = dat, family = "binomial")
+  
+  C <- coef(mylogit)[1]                 # intercept coefficient C
+  B <- coef(mylogit)[2]                 # regression coefficient B
+  
+  ( boot$mic.pred[i] <- (p-C)/B )               # MIC(predicted) 
+  
+  ## Adjusted MIC
+  rf <- (0.8/rel.trat - 0.5) * sd(dat$xoc) * cor.trat.xoc
+  ( boot$mic.adj[i] <- boot$mic.pred[i] - rf * p )
+  
+}
+
+
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+time.taken
+```
+
+
+### Bootstrap results
+
+```{r}
+round(mean(boot$mic.roc),1)
+round(mean(boot$mic.pred),1)
+round(mean(boot$mic.adj),1)
+
+round(quantile(boot$mic.roc, c(0.025, 0.975)),1)
+round(quantile(boot$mic.pred, c(0.025, 0.975)),1)
+round(quantile(boot$mic.adj, c(0.025, 0.975)),1)
+
+```

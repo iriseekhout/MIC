@@ -1,0 +1,20 @@
+Package: MIC
+Title: Minimal Important Change
+Version: 0.0.1
+Authors@R: 
+    c(person(given = "Iris",
+           family = "Eekout",
+           role = c("aut", "cre"),
+           email = "iris.eekhout@tno.nl"),
+           person(given = "Berend",
+           family = "Terluin",
+           role = c("aut"),
+           email = "berend@terluin.net")
+           )
+Description: Estimate the Minimal Important Change via different methodologies.
+License: `use_mit_license()`
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+Imports: lavaan, pROC, rsample, dplyr, purrr, tidyr
