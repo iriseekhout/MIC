@@ -1,2 +1,5 @@
 ^MIC\.Rproj$
 ^\.Rproj\.user$
+^data-raw
+^markdown
+^scripts

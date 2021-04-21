@@ -12,9 +12,9 @@ Authors@R:
            email = "berend@terluin.net")
            )
 Description: Estimate the Minimal Important Change via different methodologies.
-License: `use_mit_license()`
+License: file LICENSE
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
-Imports: lavaan, pROC, rsample, dplyr, purrr, tidyr
+Imports: lavaan, pROC, rsample, dplyr, purrr, tidyr, stats, rlang

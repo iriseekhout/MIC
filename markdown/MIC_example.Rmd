@@ -1,0 +1,265 @@
+---
+title: "MIC package demo"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+# R-package to estimate the adjusted MIC, predictive MIC and ROC-based MIC  
+
+```{r}
+# Acquire packages
+library(mirt)     # for simulating data
+library(MIC)      # for calculating the MIC
+``` 
+
+## Simulate dataset using 'mirt'
+
+This code simulates an example data set with 10 items that are measured at two time points. 
+
+### Gernerate a set of IRT item parameters
+
+```{r}
+
+set.seed(12345)
+
+b2  <- c(-0.8, -0.8, -0.4, -0.4, 0, 0, 0.4, 0.4, 0.8, 0.8)
+bc <- b2/4
+b1 <- b2 - 1 + sample(bc)
+b3 <- b2 + 1 + sample(bc)
+a1 <- sample( 1+b2/2 )
+
+( cf.simb <- data.frame(a1,b1,b2,b3) )
+``` 
+
+
+### Transform b-parameters to d-parameters (mirt works with d-parameters)
+
+difficulty (b) = easiness (d) / -a
+
+```{r}
+cf.sim <- cf.simb
+
+colnames(cf.sim) <- c("a1","d1","d2","d3")
+
+cf.sim$d1 <- -cf.simb$b1*cf.sim$a1
+cf.sim$d2 <- -cf.simb$b2*cf.sim$a1
+cf.sim$d3 <- -cf.simb$b3*cf.sim$a1
+round(cf.sim, 3)
+round(colMeans(cf.sim), 3)
+```
+
+
+
+### Create theta T1 and dataset 1 (baseline)
+
+```{r}
+a1 <- as.matrix(cf.sim[ , 1])
+d1 <- as.matrix(cf.sim[ , -1])
+
+N <- 1000         # sample size
+prop.imp <- 0.3   # proportion improved
+mn.imic  <- 0.5   # mean individual MICs in terms of theta change
+
+tet1s <- rnorm(N, 0, 1)   # simulate theta T1
+tet1s <- as.matrix(tet1s)
+
+set.seed( sample(10000:20000,1) )
+
+dat1 <- simdata(a1, d1, N, itemtype="graded", Theta=tet1s)
+dat1 <- as.data.frame(dat1)
+
+xo1 <- rowSums(dat1)   # This is the baseline test (sum) score
+```
+
+### Create theta change
+
+```{r}
+rt1ch <- -0.5            # correlation between theta T1 and theta change
+tetchs <- rt1ch*tet1s + sqrt(1-rt1ch^2)*rnorm(N, mean(tet1s), sd(tet1s))
+cor(tet1s,tetchs)
+
+tetchs <- tetchs - mean(tetchs)         # makes mean = 0
+tetchs <- (tetchs/sd(tetchs))*1         # makes SD = 1
+
+( qtl <- quantile(tetchs, prob=(1-prop.imp)) )
+( mean.tetchs <- mn.imic - qtl )        # Estimate mean theta change to get
+# the desired proportion improved
+tetchs <- tetchs + mean.tetchs          # transform mean of tetchs
+```
+
+### Create theta T2 and dataset 2  (follow-up)
+
+```{r}
+tet2s <- as.matrix(tet1s + tetchs)     # theta T2
+
+cor(tet1s, tet2s)   
+
+set.seed( sample(30000:40000,1) )
+
+dat2 <- simdata(a1, d1, N, itemtype="graded", Theta=tet2s)
+dat2 <- as.data.frame(dat2)
+```
+
+### Insert error in transition ratings
+
+```{r}
+
+rel.trat <- 0.5   # reliability of the perceived change/transition rating
+
+( sd.ch.error <- sqrt(((1-rel.trat)/rel.trat)*sd(tetchs)^2) )
+tetch.percv <- tetchs + rnorm(N, 0, sd.ch.error)  # perceived change
+```
+
+### Create iMIC distribution
+```{r}
+imic <- rnorm(N, mn.imic, 0.1*mn.imic)
+```
+
+### create dichotomous transition ratings
+
+```{r}
+trat <- numeric(N)                         
+trat[tetch.percv > imic] <- 1   
+mean(trat)                           # proportion improved based on perceived change
+```
+
+### Create dataset
+
+```{r}
+org <- data.frame(dat1, dat2, trat)
+head(org)
+nitems = 10     # Provide the number of items in the scale
+
+## Simplify/standardize the item names
+names(org)[1:nitems] <- paste0('v1', '_', 1:nitems)
+names(org)[(nitems+1):(2*nitems)] <- paste0('v2', '_', 1:nitems)
+names(org)[2*nitems+1] <- "trat"
+names(org)
+
+## copy original data into a workfile (dat)
+dat <- org
+head(dat)
+
+```
+
+
+
+
+## Estimate TR reliability with lavaan
+
+### Specify the factor model
+
+A factor for each time point, with correlated errors over time.
+
+```{r}
+model <- ' 
+   # Factors
+   F1 =~ a1*v1_1+a2*v1_2+a3*v1_3+a4*v1_4+a5*v1_5+a6*v1_6+a7*v1_7+a8*v1_8+
+         a9*v1_9+a10*v1_10+trat
+   F2 =~ a1*v2_1+a2*v2_2+a3*v2_3+a4*v2_4+a5*v2_5+a6*v2_6+a7*v2_7+a8*v2_8+
+         a9*v2_9+a10*v2_10+trat
+   
+   # Correlated errors over time
+   v1_1 ~~ v2_1
+   v1_2 ~~ v2_2
+   v1_3 ~~ v2_3
+   v1_4 ~~ v2_4
+   v1_5 ~~ v2_5
+   v1_6 ~~ v2_6
+   v1_7 ~~ v2_7
+   v1_8 ~~ v2_8
+   v1_9 ~~ v2_9
+   v1_10 ~~ v2_10
+   '
+```
+
+### Use the `tr_reliability` function
+
+```{r}
+tr_reliability(example, model)
+```
+
+*Note: Check the model fit. If necessary improve model fit by allowing correlated errors cross-sectionally (e.g., `v1_1 ~~ v1_2, v2_1 ~~ v2_2`)*
+
+#### Reliability of TR
+
+```{r}
+reliability <- tr_reliability(example, model, modification = FALSE)
+```
+
+
+## Estimate MICs
+
+First prepare the sumscores in the data, to calculate the minimal important change for.
+
+```{r}
+nitems <- 10
+example$x <- rowSums(example[,1:nitems])                 # sumscore T1
+example$y <- rowSums(example[,(nitems+1):(2*nitems)])    # sumscore T2
+
+```
+
+
+### ROC-based MIC
+
+```{r}
+mic_roc(example, x = "x", y = "y", tr = "trat")
+```
+
+
+### predicted MIC
+
+```{r}
+mic_pred(example,x = "x", y = "y", tr = "trat")
+
+```
+
+
+### Adjusted MIC
+
+```{r}
+mic_adjust(example,x = "x", y = "y", tr = "trat", reliability = reliability)
+```
+
+
+## Bootstrap confidence intervals
+
+### ROC-based MIC
+
+```{r}
+
+start <- Sys.time()
+bootCImic(example, mic = "roc", x = "x",  y = "y", tr = "trat")
+Sys.time() - start.time
+
+```
+
+### predicted MIC
+
+```{r}
+
+start <- Sys.time()
+bootCImic(example, mic = "predict", x = "x",  y = "y", tr = "trat")
+Sys.time() - start.time
+
+```
+
+### adjusted MIC
+
+```{r}
+
+start <- Sys.time()
+bootCImic(example, mic = "adjust", x = "x",  y = "y", tr = "trat", model = model)
+Sys.time() - start.time
+
+```
+

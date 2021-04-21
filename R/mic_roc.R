@@ -11,7 +11,7 @@
 #' @param tr vector with transition rates (perceived change), or column name in
 #' the data if `!is.null(data)`
 #'
-#' @return
+#' @return vector with the ROC-based MIC value
 #' @export
 #' @importFrom pROC roc coords
 #' @examples
@@ -21,7 +21,6 @@
 #' mic_roc(x = example$x, y = example$y, tr = example$trat)
 #' mic_roc(data = example, x = example$x, y = example$y, tr = example$trat)
 #' mic_roc(data = example, x = "x", y = "y", tr = "trat")
-#' mic_roc(data = example, x = "x", y = "z", tr = "trat")
 mic_roc <- function(data = NULL, x, y, tr){
   #roc
  if(!is.null(data) & !is.character(x) & !is.character(y) & !is.character(tr)){

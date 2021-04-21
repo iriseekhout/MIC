@@ -11,10 +11,11 @@
 #' the data if `!is.null(data)`
 #' @param model only used for `mic = "adjust"` the model described using the
 #' `lavaan` model syntax. see examples in [tr_reliability] or `?lavaan::model.syntax`
-#' @importFrom rsample bootstraps int_pctl analysis splits
+#' @importFrom rsample bootstraps int_pctl analysis
 #' @importFrom dplyr %>% mutate
 #' @importFrom purrr map map_dbl
 #' @importFrom tidyr tibble
+#' @importFrom rlang .data
 
 #'
 #' @return a tibble with columns .lower, .estimate, .upper, .alpha, .method, and
@@ -37,23 +38,29 @@
 #' #Sys.time()-start
 #'
 #' start <- Sys.time()
-#' bootCImic(example, mic = c("roc", "pred"))
+#' bootCImic(example, mic = c("roc", "pred"), x = "x",  y = "y", tr = "trat")
 #' Sys.time()-start
 #'
-bootCImic <- function(data, b = 1000, mic = c("roc", "predict", "adjust"), model = NULL,...){
+bootCImic <- function(data,
+                      b = 1000,
+                      mic = c("roc", "predict", "adjust"),
+                      x,
+                      y,
+                      tr,
+                      model = NULL){
   bootCI <- vector()
   #rsample bootstraps
   boots <- bootstraps(data, times = b, apparent = TRUE)
 
 
-  boot_mic_roc <- function(split, x = "x", y = "y", tr = "trat",...){
+  boot_mic_roc <- function(split, x, y, tr){
     dat <- analysis(split)
     tibble(
       term = "mic_roc",
       estimate = mic_roc(data = dat, x = x, y = y, tr = tr),
       std.err = NA_real_)
   }
-  boot_mic_pred <- function(split, x = "x", y = "y", tr = "trat"){
+  boot_mic_pred <- function(split, x, y, tr){
     dat <- analysis(split)
     tibble(
       term = "mic_pred",
@@ -66,10 +73,10 @@ bootCImic <- function(data, b = 1000, mic = c("roc", "predict", "adjust"), model
     tr_reliability(dat, model = model1, modification = FALSE)
   }
 
-  boot_mic_adjust <- function(split, x = "x", y = "y", tr = "trat", reliability){
+  boot_mic_adjust <- function(split, x, y, tr, reliability){
     dat <- analysis(split)
     tibble(
-      term = "mic_roc",
+      term = "mic_adjust",
       estimate = mic_adjust(data = dat, x = x, y = y, tr = tr, reliability = reliability),
       std.err = NA_real_)
   }
@@ -78,15 +85,15 @@ bootCImic <- function(data, b = 1000, mic = c("roc", "predict", "adjust"), model
  if("roc" %in% mic){
   boot_roc <-
     boots %>%
-    mutate(mic_roc = map(splits, boot_mic_roc)) %>%
-    int_pctl(.data , mic_roc, alpha = 0.05)
+    mutate(mic_roc = map(splits, boot_mic_roc, x = x, y = y, tr = tr)) %>%
+    int_pctl(. , mic_roc, alpha = 0.05)
   bootCI <- rbind(bootCI, boot_roc)
  }
   if("pred" %in% mic){
   boot_pred <-
     boots %>%
-    mutate(mic_pred = map(splits, boot_mic_pred)) %>%
-    int_pctl(.data , mic_pred, alpha = 0.05)
+    mutate(mic_pred = map(splits, boot_mic_pred, x = x, y = y, tr = tr)) %>%
+    int_pctl(. , mic_pred, alpha = 0.05)
   bootCI <- rbind(bootCI, boot_pred)
 
   }
@@ -94,8 +101,8 @@ bootCImic <- function(data, b = 1000, mic = c("roc", "predict", "adjust"), model
   boot_adjust <-
     boots %>%
     mutate(bootrel = map_dbl(splits, boot_tr_rel, model1 = model),
-           mic_adjust = map(splits, boot_mic_adjust, reliability = .data$bootrel)) %>%
-    int_pctl(.data , mic_adjust, alpha = 0.05)
+           mic_adjust = map(splits, boot_mic_adjust, x = x, y = y, tr = tr, reliability = .data$bootrel)) %>%
+    int_pctl(. , mic_adjust, alpha = 0.05)
   bootCI <- rbind(bootCI, boot_adjust)
 
   }

@@ -20,7 +20,7 @@ transition rate in separate columns.}
 the data if \code{!is.null(data)}}
 }
 \value{
-
+vector with the ROC-based MIC value
 }
 \description{
 Minimal Important Change (MIC) obtained via the ROC.
@@ -32,5 +32,4 @@ example$y <- rowSums(example[,(nitems+1):(2*nitems)])    # sumscore T2
 mic_roc(x = example$x, y = example$y, tr = example$trat)
 mic_roc(data = example, x = example$x, y = example$y, tr = example$trat)
 mic_roc(data = example, x = "x", y = "y", tr = "trat")
-mic_roc(data = example, x = "x", y = "z", tr = "trat")
 }

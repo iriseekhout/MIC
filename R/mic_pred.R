@@ -12,7 +12,7 @@
 #' @param tr vector with transition rates (perceived change), or column name in
 #' the data if `!is.null(data)`
 #'
-#' @return
+#' @return vector with the predicted MIC value
 #' @export
 #'
 #' @examples
@@ -22,7 +22,6 @@
 #' mic_pred(x = example$x, y = example$y, tr = example$trat)
 #' mic_pred(data = example, x = example$x, y = example$y, tr = example$trat)
 #' mic_pred(data = example, x = "x", y = "y", tr = "trat")
-#' mic_pred(data = example, x = "x", y = "z", tr = "trat")
 mic_pred <- function(data = NULL, x, y , tr){
 
   if(!is.null(data) & !is.character(x) & !is.character(y) & !is.character(tr)){

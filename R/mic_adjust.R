@@ -11,20 +11,19 @@
 #' `!is.null(data)`
 #' @param tr vector with transition rates (perceived change), or column name in
 #' the data if `!is.null(data)`
-#' @param reliabiilty the reliability for the transition score. Can be computed
+#' @param reliability the reliability for the transition score. Can be computed
 #' with the `tr_reliability()` function.
+#' @importFrom stats cor coef sd glm
 #'
-#' @return
+#' @return vector with the adjusted MIC value
 #' @export
 #'
 #' @examples
 #' nitems <- 10
 #' example$x <- rowSums(example[,1:nitems])                 # sumscore T1
 #' example$y <- rowSums(example[,(nitems+1):(2*nitems)])    # sumscore T2
-#' mic_pred(x = example$x, y = example$y, tr = example$trat)
-#' mic_pred(data = example, x = example$x, y = example$y, tr = example$trat)
-#' mic_pred(data = example, x = "x", y = "y", tr = "trat")
-#' mic_pred(data = example, x = "x", y = "z", tr = "trat")
+#' mic_adjust(x = example$x, y = example$y, tr = example$trat, reliability = 0.5)
+#' mic_adjust(data = example, x = "x", y = "y", tr = "trat", reliability = 0.5)
 mic_adjust <- function(data = NULL, x, y , tr, reliability){
 
   if(!is.null(data) & !is.character(x) & !is.character(y) & !is.character(tr)){

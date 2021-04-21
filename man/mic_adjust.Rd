@@ -19,11 +19,11 @@ transition rate in separate columns.}
 \item{tr}{vector with transition rates (perceived change), or column name in
 the data if \code{!is.null(data)}}
 
-\item{reliabiilty}{the reliability for the transition score. Can be computed
+\item{reliability}{the reliability for the transition score. Can be computed
 with the \code{tr_reliability()} function.}
 }
 \value{
-
+vector with the adjusted MIC value
 }
 \description{
 Minimal Important Change (MIC) obtained as predicted value from a logistic
@@ -33,8 +33,6 @@ regression model.
 nitems <- 10
 example$x <- rowSums(example[,1:nitems])                 # sumscore T1
 example$y <- rowSums(example[,(nitems+1):(2*nitems)])    # sumscore T2
-mic_pred(x = example$x, y = example$y, tr = example$trat)
-mic_pred(data = example, x = example$x, y = example$y, tr = example$trat)
-mic_pred(data = example, x = "x", y = "y", tr = "trat")
-mic_pred(data = example, x = "x", y = "z", tr = "trat")
+mic_adjust(x = example$x, y = example$y, tr = example$trat, reliability = 0.5)
+mic_adjust(data = example, x = "x", y = "y", tr = "trat", reliability = 0.5)
 }

@@ -8,8 +8,10 @@ bootCImic(
   data,
   b = 1000,
   mic = c("roc", "predict", "adjust"),
-  model = NULL,
-  ...
+  x,
+  y,
+  tr,
+  model = NULL
 )
 }
 \arguments{
@@ -19,9 +21,6 @@ bootCImic(
 
 \item{mic}{mic method to apply bootstraps for \code{c("roc", "predict", "adjust")}}
 
-\item{model}{only used for \code{mic = "adjust"} the model described using the
-\code{lavaan} model syntax. see examples in \link{tr_reliability} or \code{?lavaan::model.syntax}}
-
 \item{x}{vector with score at time point 1, or column name in the data if
 \code{!is.null(data)}}
 
@@ -30,6 +29,9 @@ bootCImic(
 
 \item{tr}{vector with transition rates (perceived change), or column name in
 the data if \code{!is.null(data)}}
+
+\item{model}{only used for \code{mic = "adjust"} the model described using the
+\code{lavaan} model syntax. see examples in \link{tr_reliability} or \code{?lavaan::model.syntax}}
 }
 \value{
 a tibble with columns .lower, .estimate, .upper, .alpha, .method, and
@@ -54,7 +56,7 @@ F2 =~ a1*v2_1+a2*v2_2+a3*v2_3+a4*v2_4+a5*v2_5+a6*v2_6+a7*v2_7+a8*v2_8+
 #Sys.time()-start
 
 start <- Sys.time()
-bootCImic(example, mic = c("roc", "pred"))
+bootCImic(example, mic = c("roc", "pred"), x = "x",  y = "y", tr = "trat")
 Sys.time()-start
 
 }
