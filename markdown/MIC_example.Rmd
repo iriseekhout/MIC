@@ -239,7 +239,7 @@ mic_adjust(example,x = "x", y = "y", tr = "trat", reliability = reliability)
 
 start <- Sys.time()
 bootCImic(example, mic = "roc", x = "x",  y = "y", tr = "trat")
-Sys.time() - start.time
+Sys.time() - start
 
 ```
 
@@ -249,7 +249,7 @@ Sys.time() - start.time
 
 start <- Sys.time()
 bootCImic(example, mic = "predict", x = "x",  y = "y", tr = "trat")
-Sys.time() - start.time
+Sys.time() - start
 
 ```
 
@@ -259,7 +259,7 @@ Sys.time() - start.time
 
 start <- Sys.time()
 bootCImic(example, mic = "adjust", x = "x",  y = "y", tr = "trat", model = model)
-Sys.time() - start.time
+Sys.time() - start
 
 ```
 
