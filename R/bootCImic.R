@@ -27,12 +27,11 @@
 #' example$x <- rowSums(example[,1:nitems])                 # sumscore T1
 #' example$y <- rowSums(example[,(nitems+1):(2*nitems)])    # sumscore T2
 #' model <- '
-#' # Factors
-#' F1 =~ a1*v1_1+a2*v1_2+a3*v1_3+a4*v1_4+a5*v1_5+a6*v1_6+a7*v1_7+a8*v1_8+
-#'   a9*v1_9+a10*v1_10+trat
-#' F2 =~ a1*v2_1+a2*v2_2+a3*v2_3+a4*v2_4+a5*v2_5+a6*v2_6+a7*v2_7+a8*v2_8+
-#'   a9*v2_9+a10*v2_10+trat
-#'   '
+#' F1 =~ v1_1+v1_2+v1_3+v1_4+v1_5+v1_6+v1_7+v1_8+
+#'   v1_9+v1_10+trat
+#' F2 =~ v2_1+v2_2+v2_3+v2_4+v2_5+v2_6+v2_7+v2_8+
+#'   v2_9+v2_10+trat'
+#'
 #' #start <- Sys.time()
 #' #bootCImic(example, model = model)
 #' #Sys.time()-start
@@ -49,13 +48,14 @@ bootCImic <- function(data,
                       tr,
                       model = NULL){
   bootCI <- vector()
+
   #rsample bootstraps
   boots <- bootstraps(data, times = b, apparent = TRUE)
 
 
   boot_mic_roc <- function(split, x, y, tr){
-    dat <- analysis(split)
-    tibble(
+     dat <- analysis(split)
+      tibble(
       term = "mic_roc",
       estimate = mic_roc(data = dat, x = x, y = y, tr = tr),
       std.err = NA_real_)
@@ -68,8 +68,10 @@ bootCImic <- function(data,
       std.err = NA_real_)
   }
 
-  boot_tr_rel <- function(split, model1 = model){
+  boot_tr_rel <- function(split, model1 = model, prog){
+    prog$tick()
     dat <- analysis(split)
+    Sys.sleep(0.0001)
     tr_reliability(dat, model = model1, modification = FALSE)
   }
 
@@ -80,7 +82,8 @@ bootCImic <- function(data,
       estimate = mic_adjust(data = dat, x = x, y = y, tr = tr, reliability = reliability),
       std.err = NA_real_)
   }
-
+  tot_rep = b
+  pb <- progress_bar$new(total = tot_rep + 1)
 
  if("roc" %in% mic){
   boot_roc <-
@@ -100,7 +103,7 @@ bootCImic <- function(data,
   if("adjust" %in% mic){
   boot_adjust <-
     boots %>%
-    mutate(bootrel = map_dbl(splits, boot_tr_rel, model1 = model),
+    mutate(bootrel = map_dbl(splits, boot_tr_rel, model1 = model, prog = pb),
            mic_adjust = map(splits, boot_mic_adjust, x = x, y = y, tr = tr, reliability = .data$bootrel)) %>%
     int_pctl(. , mic_adjust, alpha = 0.05)
   bootCI <- rbind(bootCI, boot_adjust)
