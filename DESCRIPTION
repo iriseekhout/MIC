@@ -1,6 +1,8 @@
 Package: MIC
+Type: Package
 Title: Minimal Important Change
-Version: 0.1.0
+Date: 2021-08-03
+Version: 1.0.0
 Authors@R: 
     c(person(given = "Iris",
            family = "Eekhout",
@@ -12,6 +14,7 @@ Authors@R:
            email = "berend@terluin.net")
            )
 Description: Estimate the Minimal Important Change via different methodologies.
+Depends: R (>= 3.5.0)
 License: file LICENSE
 Encoding: UTF-8
 LazyData: true
