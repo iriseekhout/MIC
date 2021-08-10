@@ -280,7 +280,7 @@ for(i in 1:nboot) {
   
   # model is already defined in the previous section 
   
-  fit <- cfa(model, data=dat, ordered=names(dat), 
+  fit <- cfa(model, data=dat, ordered=T, 
              test="mean.var.adjusted")
   
   pe <- parameterEstimates(fit, standardized=T, rsquare=T)

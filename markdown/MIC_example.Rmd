@@ -15,6 +15,7 @@ knitr::opts_chunk$set(
 
 # R-package to estimate the adjusted MIC, predicted MIC and ROC-based MIC  
 
+The R-package is public and can be installed from GitHub using `remotes::install_github(repo = "iriseekhout/MIC"`. 
 ```{r}
 # to install MIC package from Github: 
 #remotes::install_github(repo = "iriseekhout/MIC")
@@ -26,7 +27,7 @@ library(MIC)      # for calculating the MIC
 
 ## Simulate dataset using 'mirt'
 
-This code simulates an example data set with 10 items that are measured at two time points. 
+This code simulates an example data set with 10 items that are measured at two time points. This dataset is used as an illustration.
 
 ### Gernerate a set of IRT item parameters
 

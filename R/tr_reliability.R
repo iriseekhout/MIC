@@ -34,7 +34,7 @@
 #' tr_reliability(data = example, model = model)
 tr_reliability <- function(data, model, modification = TRUE){
 
-  fit <- cfa(model, data=data, ordered=names(data),
+  fit <- cfa(model, data=data, ordered=T,
              test="mean.var.adjusted")
 
   fitMeasures(fit, fit.measures = c("cfi.scaled","tli.scaled","rmsea.scaled",
