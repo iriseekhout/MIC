@@ -1,10 +1,10 @@
 ---
-title: "adjusted MIC"
+title: "Chapter 5: adjusted MIC"
 output:
   pdf_document: default
   html_document: default
 ---
-
+\setcounter{page}{10}
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
 	echo = TRUE,

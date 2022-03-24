@@ -1,11 +1,11 @@
 ---
-title: "Chapter 5: MIC package demo"
+title: "Chapter 6: MIC package demo"
 output:
   pdf_document: default
   html_document: default
   
 ---
-\setcounter{page}{28}
+\setcounter{page}{19}
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
