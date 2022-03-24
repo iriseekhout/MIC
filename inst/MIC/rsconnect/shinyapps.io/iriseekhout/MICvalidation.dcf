@@ -1,0 +1,12 @@
+name: MICvalidation
+title: MICvalidation
+username:
+account: iriseekhout
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5000967
+bundleId: 5720995
+url: https://iriseekhout.shinyapps.io/MICvalidation/
+when: 1648106784.58453
+asMultiple: FALSE
+asStatic: FALSE
