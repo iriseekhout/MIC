@@ -16,6 +16,7 @@
 #' @importFrom purrr map map_dbl
 #' @importFrom tidyr tibble
 #' @importFrom rlang .data
+#' @importFrom progress progress_bar
 
 #'
 #' @return a tibble with columns .lower, .estimate, .upper, .alpha, .method, and

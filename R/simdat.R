@@ -3,7 +3,7 @@
 #' R codes taken from supplementary materials of Terluin et al Qual Life Res. 2024;33:963–73
 #'
 #'
-#' @param N
+#' @param N sample size for simulation
 #' @param par.mn.imic Numeric vector; mean individual MICs. When 0.37425, corresponds to MIC 2.5 points on the raw scale.
 #' @param par.sd.imic Numeric vector; sd of individual MICs. Cannot be too large lest MIC is negative
 #' @param rt1ch Numeric vector; correlation between tet1s and latent change
