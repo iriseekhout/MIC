@@ -1,0 +1,142 @@
+---
+title: "MIC function additions"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+toc: true
+format:
+  pdf
+execute:
+  warning: true
+  echo: TRUE
+  cache: TRUE
+bibliography: bibliography.bib  
+csl: apmr.csl  
+  
+---
+
+## Objectives
+- Illustrates use of the `MIC` functions - namely, `simdat`, `mic_iapm` and `mic_lcfa`  
+
+ 
+## Load `MIC` package and new `R` functions  
+
+```{r}
+rm(list=ls()) 
+suppressPackageStartupMessages(library(MIC)) 
+library(mirt)
+ 
+``` 
+ 
+## Model Specification 
+These models, described using the `lavaan` model syntax, will be used in `MIC::tr_reliability` and `mic_lcfa`.
+
+ 
+```{r}
+model_cfa <- '
+   # Factors
+   F1 =~ a1*Item_1+a2*Item_2+a3*Item_3+a4*Item_4+a5*Item_5+a6*Item_6+
+         a7*Item_7+a8*Item_8+a9*Item_9+a10*Item_10+f1*trat
+   F2 =~ a1*Item_1.1+a2*Item_2.1+a3*Item_3.1+a4*Item_4.1+a5*Item_5.1+
+         a6*Item_6.1+a7*Item_7.1+a8*Item_8.1+a9*Item_9.1+a10*Item_10.1+f2*trat
+
+   # Correlated errors over time
+   Item_1 ~~ Item_1.1
+   Item_2 ~~ Item_2.1
+   Item_3 ~~ Item_3.1
+   Item_4 ~~ Item_4.1
+   Item_5 ~~ Item_5.1
+   Item_6 ~~ Item_6.1
+   Item_7 ~~ Item_7.1
+   Item_8 ~~ Item_8.1
+   Item_9 ~~ Item_9.1
+   Item_10 ~~ Item_10.1
+
+   # Thresholds
+   Item_1 + Item_1.1 | b11*t1+b12*t2+b13*t3
+   Item_2 + Item_2.1 | b21*t1+b22*t2+b23*t3
+   Item_3 + Item_3.1 | b31*t1+b32*t2+b33*t3
+   Item_4 + Item_4.1 | b41*t1+b42*t2+b43*t3
+   Item_5 + Item_5.1 | b51*t1+b52*t2+b53*t3
+   Item_6 + Item_6.1 | b61*t1+b62*t2+b63*t3
+   Item_7 + Item_7.1 | b71*t1+b72*t2+b73*t3
+   Item_8 + Item_8.1 | b81*t1+b82*t2+b83*t3
+   Item_9 + Item_9.1 | b91*t1+b92*t2+b93*t3
+ Item_10 + Item_10.1 | b101*t1+b102*t2+b103*t3
+
+
+   # Variances/covariances
+   F1 ~~ 1*F1
+   F2 ~~ NA*F2
+   F1 ~~ NA*F2
+
+   Item_1.1 ~~ NA*Item_1.1
+   Item_2.1 ~~ NA*Item_2.1
+   Item_3.1 ~~ NA*Item_3.1
+   Item_4.1 ~~ NA*Item_4.1
+   Item_5.1 ~~ NA*Item_5.1
+   Item_6.1 ~~ NA*Item_6.1
+   Item_7.1 ~~ NA*Item_7.1
+   Item_8.1 ~~ NA*Item_8.1
+   Item_9.1 ~~ NA*Item_9.1
+   Item_10.1 ~~ NA*Item_10.1
+
+   # Means/intercepts
+   F1 ~  0*1
+   F2 ~ NA*1
+
+   # Equal-but-opposite constrained factor loadings TR
+   # remove this for psb assessment
+   # f1 == -f2
+
+   # b_param for trt
+   trat | thr.trt*t1
+   psb := (f1/f2) +1
+   b_param := thr.trt/f2
+   '
+
+
+
+model_tr <- 'F1 = ~ Item_1 + Item_2 + Item_3 + Item_4 + Item_5 + Item_6 + Item_7 + Item_8 + Item_9 + Item_10 + trat
+F2 = ~ Item_1.1 + Item_2.1 + Item_3.1 + Item_4.1 + Item_5.1 + Item_6.1 + Item_7.1 + Item_8.1 + Item_9.1 + Item_10.1 + trat
+Item_1 ~~ Item_1.1
+Item_2 ~~ Item_2.1
+Item_3 ~~ Item_3.1
+Item_4 ~~ Item_4.1
+Item_5 ~~ Item_5.1
+Item_6 ~~ Item_6.1
+Item_7 ~~ Item_7.1
+Item_8 ~~ Item_8.1
+Item_9 ~~ Item_9.1
+Item_10 ~~ Item_10.1
+'
+
+
+``` 
+
+## `simdat`
+```{r}
+
+mydat <- simdat()$datw
+head(mydat)
+```
+
+
+## `mic_lcfa`
+
+`mic_lcfa` estimates (i) present state bias in transition ratings [@griffiths_confirmatory_2022]  and (ii) anchor-based minimal important change using longitudinal confirmatory factor analysis[@terluin_estimating_2024] 
+```{r}
+mydat_cfa <- mydat[, !names(mydat) %in% "xoc"]
+mic_lcfa (mydat = mydat_cfa, model = model_cfa, B = 50) ## should actually do more bootstrap iterations! 
+```
+
+## `mic_iapm`
+`mic_iapm` computes the (i) predictive modeling-based, (ii) adjusted predictive modeling-based, and (iii) "improved" adjusted predictive modeling-based[@terluin_improved_2022] MICs and their attendant bootstrapped 95% CIs.   
+
+Specifically, to compute the "improved" APM-based MIC, `mic_iapm` requires information about the reliability of the transition ratings (estimated using `MIC::tr_reliability`).
+
+```{r}
+(mytr_rel <- tr_reliability(data = mydat_cfa, model = model_tr)$reliability)
+mic_iapm(mypred= "xoc", anchor = "trat", mydata= mydat, tr_rel = mytr_rel, nboot = 500)
+```
+ 
+ 
+References
