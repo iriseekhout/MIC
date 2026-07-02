@@ -28,7 +28,7 @@
 #'   only for item pairs that required collapsing or equalization.
 #'
 #' @return A list with components:
-#' \describe{
+# \describe{
 #'   \item{data}{The processed data frame, ordered as T1 items followed by T2 items.}
 #'   \item{shift}{The global shift applied to item responses.}
 #'   \item{pair_map}{A data frame describing matched T1/T2 item pairs.}
@@ -800,5 +800,7 @@ equalize_levels <- function(
   # Return
   # ---------------------------------------------------------------------------
 
+
   list(data = out)
 }
+
