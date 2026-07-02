@@ -593,7 +593,7 @@ lcfa_model <- function(
 #' @export
 print.lcfa_model <- function(x, ...) {
 
-  cat("\n================ LCFA LAVAAN MODEL ================\n\n")
+  cat("\n================ LCFA LAVAAN MODEL =================\n\n")
   cat(x$model)
   cat("\n====================================================\n")
 
