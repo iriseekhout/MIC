@@ -436,9 +436,9 @@ mim_threshold <- function(
     item_probs = main$item_probs,
     item_score_values = main$item_score_values,
     # item_discretized = main$item_discretized,
-    # anchor_var = main$anchor_var,
+    anchor_var = main$anchor_var,
     # anchor_obs_name = main$anchor_obs_name,
-    # item_vars = main$item_vars,
+    item_vars = main$item_vars,
     item_cfa_names = main$item_cfa_names,
     boot_thresholds = boot_thresholds,
     boot_success = boot_success
@@ -476,7 +476,6 @@ print.mim_threshold <- function(x, ...) {
 
   if (!is.null(details)) {
     cat("Anchor variable:", details$anchor_var, "\n")
-    cat("Anchor CFA variable:", details$anchor_obs_name, "\n")
     cat("Number of items:", length(details$item_vars), "\n")
     cat("Items:", paste(details$item_vars, collapse = ", "), "\n")
   }

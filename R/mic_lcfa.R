@@ -416,11 +416,11 @@ mic_lcfa <- function(
       warning("No successful bootstrap estimates were obtained.", call. = FALSE)
     }
 
-  } else if (B > 0L && B <= 100L) {
+  } else if (B > 0L && B < 100L) {
 
     message(
-      "Bootstrap CI not computed because `B <= 100`. ",
-      "Set `B > 100` to request bootstrapping."
+      "Bootstrap CI not computed because `B < 100`. ",
+      "Set `B >= 100` to request bootstrapping."
     )
   }
 
