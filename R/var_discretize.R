@@ -2,7 +2,7 @@
 #'
 #' `var_discretize()` converts a continuous numeric vector into equal-width
 #' integer categories. It is intended for creating ordered indicators for
-#' lavaan-based CFA workflows.
+#' lavaan-based CFA workflows. To be used with `sim_threshold_cfa`
 #'
 #' Missing values are allowed. They are ignored when computing the
 #' discretization range and are preserved as `NA_integer_` in the returned
