@@ -33,7 +33,7 @@ used levels, and unused levels.
 \description{
 \code{var_discretize()} converts a continuous numeric vector into equal-width
 integer categories. It is intended for creating ordered indicators for
-lavaan-based CFA workflows.
+lavaan-based CFA workflows. To be used with \code{sim_threshold_cfa}
 }
 \details{
 Missing values are allowed. They are ignored when computing the

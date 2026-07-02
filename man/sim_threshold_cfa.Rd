@@ -43,7 +43,7 @@ If the transition variable already has exactly two unique values, \code{tr_cut}
 is ignored.}
 
 \item{B}{Number of bootstrap samples. Bootstrap CI is computed only if
-\code{B > 100}.}
+\code{B >= 100}.}
 
 \item{report_every}{During bootstrapping, print progress every
 \code{report_every} attempted fits.}

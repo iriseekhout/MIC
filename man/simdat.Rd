@@ -2,7 +2,7 @@
 % Please edit documentation in R/simdat.R
 \name{simdat}
 \alias{simdat}
-\title{Simulates Time 1 and Time 2 PROM items and a transition rating vector from an item response theory context.}
+\title{Simulates Time 1 and Time 2 PROM items and a transition rating vector}
 \usage{
 simdat(
   N = 2000,
@@ -11,35 +11,39 @@ simdat(
   rt1ch = -0.5,
   mean.tetchs = 0.3,
   par.sd.tetchs = 1,
-  par.rel.trt = 0.7
+  par.rel.trt = 0.7,
+  seed = 1234
 )
 }
 \arguments{
-\item{N}{sample size for simulation}
+\item{N}{Integer. Sample size for simulation.}
 
-\item{par.mn.imic}{Numeric vector; mean individual MICs. When 0.37425, corresponds to MIC 2.5 points on the raw scale.}
+\item{par.mn.imic}{Numeric. Mean individual MIC. When 0.37425, corresponds
+approximately to MIC 2.5 points on the raw scale.}
 
-\item{par.sd.imic}{Numeric vector; sd of individual MICs. Cannot be too large lest MIC is negative}
+\item{par.sd.imic}{Numeric. Standard deviation of individual MICs.}
 
-\item{rt1ch}{Numeric vector; correlation between tet1s and latent change}
+\item{rt1ch}{Numeric. Correlation between baseline theta and latent change.}
 
-\item{mean.tetchs}{Numeric vector; mean latent change}
+\item{mean.tetchs}{Numeric. Mean latent change.}
 
-\item{par.sd.tetchs}{Numeric vector; standard deviation of \code{tetchs}}
+\item{par.sd.tetchs}{Numeric. Standard deviation of latent change.}
 
-\item{par.rel.trt}{Numeric vector; transition rating reliability}
+\item{par.rel.trt}{Numeric. Transition rating reliability.}
+
+\item{seed}{Optional integer. Random seed used to make the simulated data
+reproducible. If \code{NULL}, the current random-number generator state is used.}
 }
 \value{
-a list of estimates and a dataframe with Time 1 and Time 2 PROM items and a transition rating vector (\code{trat})
+A list of simulation summaries and a data frame with Time 1 items,
+Time 2 items, transition rating \code{trat}, and observed PROM change score
+\code{xoc}.
 }
 \description{
-R codes taken from supplementary materials of Terluin et al Qual Life Res. 2024;33:963–73
+Simulates Time 1 and Time 2 PROM item responses and a transition rating
+vector from an item response theory context.
 }
-\examples{
-Simulate baseline data-set and change (theta) scores
-generate output
-}
-\seealso{
-Terluin B, Trigg A, Fromy P, Schuller W, Terwee CB, Bjorner JB. Estimating anchor-based minimal
-important change using longitudinal confirmatory factor analysis. Qual Life Res. 2024;33:963–73.
+\details{
+R code adapted from supplementary materials of Terluin et al.
+Qual Life Res. 2024;33:963–973.
 }
