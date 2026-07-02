@@ -480,7 +480,7 @@ print.mim_threshold <- function(x, ...) {
     cat("Items:", paste(details$item_vars, collapse = ", "), "\n")
   }
 
-  cat("\nUse `mim_threshold_details(x)` to retrieve the lavaan fit, CFA data, probabilities, and bootstrap results.\n")
+  cat("\nPlease use `mim_threshold_details(x)` to retrieve the lavaan fit, CFA data, probabilities, and bootstrap results.\n")
 
   invisible(x)
 }
