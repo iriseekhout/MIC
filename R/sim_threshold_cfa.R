@@ -394,7 +394,7 @@ sim_threshold_cfa <- function(
 print.sim_threshold_cfa <- function(x, ...) {
 
   cat("CFA-based SIM threshold\n")
-  cat("-----------------------\n")
+  cat("------------------------\n")
   cat("Threshold:", round(x$threshold, 4), "\n")
 
   if (!is.null(x$ci)) {
