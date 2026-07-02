@@ -1,7 +1,7 @@
 #' Compute ordered item category probabilities
 #'
 #' Internal helper: Computes category probabilities for an ordered lavaan indicator at a given
-#' latent factor value.
+#' latent factor value. Used in `sim_threshold_cfa` and `mim_threshold`
 #'
 #' @param fit A fitted lavaan object.
 #' @param item Ordered item name.
