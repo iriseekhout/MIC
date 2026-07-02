@@ -459,7 +459,7 @@ mim_threshold <- function(
 print.mim_threshold <- function(x, ...) {
 
   cat("CFA-based MIM threshold\n")
-  cat("-----------------------\n")
+  cat("------------------------\n")
   cat("Threshold:", round(x$threshold, 4), "\n")
 
   if (!is.null(x$ci)) {
