@@ -9,7 +9,7 @@
 #' @param tr_rel Reliability of the transition rating estimated using \code{tr_reliability}.
 #' @param nboot Integer; number of bootstrapped samples when estimating the 95% CI.  `nboot` must  > 100 to trigger the bootstrapping process.
 #' @param report_every Integer. The interval at which the counter should be printed.
-#' @param verbose Logical. If TRUE, the counter is printed every `reoprt_every` iterations. If FALSE, no counter is printed.
+#' @param verbose Logical. If TRUE, the counter is printed every `report_every` iterations. If FALSE, no counter is printed.
 #'
 #' @return A list of Predictive modeling-based MIC estimates
 #' @export
@@ -45,7 +45,7 @@ mic_iapm <- function(
   }
 
   #' progress indicator
-  if(verbose) sprintf("working on %s and %s", mypred, anchor) %>% print
+  if(verbose) sprintf("working on %s and %s", mypred, anchor) |>  print()
 
   tmpdata <- data.frame(anchor = anchor , mypred = mypred)
   mylrm   <- glm(anchor ~ mypred, data = tmpdata, family = "binomial")
