@@ -2,34 +2,112 @@
 % Please edit documentation in R/mic_lcfa.R
 \name{mic_lcfa}
 \alias{mic_lcfa}
-\title{Estimates (i) present state bias in transition ratings and (ii) anchor-based minimal important change using longitudinal confirmatory factor analysis}
+\title{Estimate present-state bias and anchor-based MIC using longitudinal CFA}
 \usage{
-mic_lcfa(mydat, model, trt_cut = 1, B = 0, report_every = 100)
+mic_lcfa(
+  mydat,
+  trt = NULL,
+  model = NULL,
+  trt_cut = 1,
+  auto_equalize = TRUE,
+  pair_by = c("position", "suffix"),
+  t1_suffix = NULL,
+  t2_suffix = NULL,
+  min_resp = 10L,
+  shift_to_one = TRUE,
+  shift_back = FALSE,
+  B = 0L,
+  report_every = 100L,
+  N_ets = 5000L,
+  return_prepared = FALSE,
+  print_model = TRUE,
+  verbose = TRUE
+)
 }
 \arguments{
-\item{mydat}{A data frame in which the variables are ordered to include Time 1 items, Time 2 items, and a single transition rating variable. User needs to ensure that each PROM item has the same number of levels at both time-points.}
+\item{mydat}{Data frame containing paired Time 1 and Time 2 PROM items and
+one transition rating variable.}
 
-\item{model}{Model specification based on \code{lavaan} model syntax}
+\item{trt}{Character. Name of the transition rating variable. If \code{NULL},
+the final column of \code{mydat} is used.}
 
-\item{trt_cut}{Numeric vector; cutpoint to define a dichotomized transition rating variable}
+\item{model}{Optional lavaan model syntax. If \code{NULL}, the model is generated
+automatically using \code{lcfa_model()}.}
 
-\item{B}{Integer; number of bootstrapped samples. \code{B}>0 triggers the bootstrapping process.}
+\item{trt_cut}{Cutpoint used to dichotomize the transition rating variable
+when it has more than two observed values. Values >= \code{trt_cut} are coded 1.}
 
-\item{report_every}{Integer. The interval at which the counter should be printed.}
+\item{auto_equalize}{Logical. If \code{TRUE}, item levels are equalized using
+\code{equalize_levels()}.}
+
+\item{pair_by}{Pairing method passed to \code{equalize_levels()} and \code{lcfa_model()}.
+\code{"position"} assumes Time 1 items followed by Time 2 items. \code{"suffix"}
+detects pairs using \code{t1_suffix} and \code{t2_suffix}.}
+
+\item{t1_suffix}{Regex suffix identifying Time 1 items when
+\code{pair_by = "suffix"}.}
+
+\item{t2_suffix}{Regex suffix identifying Time 2 items when
+\code{pair_by = "suffix"}.}
+
+\item{min_resp}{Minimum number of responses required in each response
+category before collapsing.}
+
+\item{shift_to_one}{Passed to \code{equalize_levels()}.}
+
+\item{shift_back}{Passed to \code{equalize_levels()}.}
+
+\item{B}{Integer. Number of bootstrap samples. Bootstrap CI is computed only if
+\code{B > 100}.}
+
+\item{report_every}{Progress message interval during bootstrapping.}
+
+\item{N_ets}{Number of simulated theta values used for expected test score
+calculation.}
+
+\item{return_prepared}{Logical. If \code{TRUE}, returns prepared data, model, fit,
+and bootstrap details.}
+
+\item{print_model}{Logical. If \code{TRUE}, prints the generated lavaan model.}
+
+\item{verbose}{Logical. If \code{TRUE}, prints progress messages.}
 }
 \value{
-a list of estimates including the present state bias and the MIC with its bootstrapped 95\% CI.
+A \code{mic_lcfa} object.
 }
 \description{
-Based on methods developed by Terluin et al J Clin Epidemiol. 2022;143:128-136. and Qual Life Res. 2024;33:963–73
+\code{mic_lcfa()} estimates:
 }
-\examples{
-single factor IRT model
-single factor IRT model
+\details{
+\enumerate{
+\item present-state bias in transition ratings, and
+\item anchor-based minimal important change (MIC)
 }
-\seealso{
-Terluin B, Trigg A, Fromy P, Schuller W, Terwee CB, Bjorner JB. Estimating anchor-based minimal
-important change using longitudinal confirmatory factor analysis. Qual Life Res. 2024;33:963–73.
+
+using an unconstrained longitudinal confirmatory factor analysis model.
+
+The input data should contain paired Time 1 and Time 2 PROM items plus one
+transition rating variable. Item pairs may be identified by position or by
+suffixes. By default, paired item levels are first equalized using
+\code{equalize_levels()}, and the lavaan syntax is generated using \code{lcfa_model()}.
+
+This implementation follows the updated recommendation that the transition
+rating loadings should be freely estimated; that is, the constraint
+\code{f1 == -f2} is not applied.
+}
+\references{
+Terluin, B., Fromy, P., Trigg, A., Terwee, C.B., & Bjorner, J.B.
+Effect of present state bias on minimal important change estimates:
+a simulation study. Quality of Life Research. 2024.
+doi:10.1007/s11136-024-03763-4
+
 Terluin B, Griffiths P, Trigg A, Terwee CB, Bjorner JB.
-Present state bias in transition ratings was accurately estimated in simulated and real data. J Clin Epidemiol. 2022;143:128-136. doi:10.1016/j.jclinepi.2021.12.024
+Present state bias in transition ratings was accurately estimated in
+simulated and real data. J Clin Epidemiol. 2022;143:128-136.
+doi:10.1016/j.jclinepi.2021.12.024
+
+Terluin B, Trigg A, Fromy P, Schuller W, Terwee CB, Bjorner JB.
+Estimating anchor-based minimal important change using longitudinal
+confirmatory factor analysis. Qual Life Res. 2024;33:963-973.
+doi:10.1007/s11136-023-03577-w
 }

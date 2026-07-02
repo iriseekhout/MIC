@@ -28,7 +28,7 @@ mic_iapm(
 
 \item{report_every}{Integer. The interval at which the counter should be printed.}
 
-\item{verbose}{Logical. If TRUE, the counter is printed every \code{reoprt_every} iterations. If FALSE, no counter is printed.}
+\item{verbose}{Logical. If TRUE, the counter is printed every \code{report_every} iterations. If FALSE, no counter is printed.}
 }
 \value{
 A list of Predictive modeling-based MIC estimates
