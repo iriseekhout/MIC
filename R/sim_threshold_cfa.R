@@ -34,7 +34,7 @@
 #'   If the transition variable already has exactly two unique values, `tr_cut`
 #'   is ignored.
 #' @param B Number of bootstrap samples. Bootstrap CI is computed only if
-#'   `B > 100`.
+#'   `B >= 100`.
 #' @param report_every During bootstrapping, print progress every
 #'   `report_every` attempted fits.
 #' @param require_all_sim_levels Passed to `var_discretize()`.
@@ -298,7 +298,7 @@ sim_threshold_cfa <- function(
   boot_success <- NULL
   ci <- NULL
 
-  if (!is.null(B) && B > 100L) {
+  if (!is.null(B) && B >= 100L) {
 
     B <- as.integer(B)
     n <- nrow(mydata)

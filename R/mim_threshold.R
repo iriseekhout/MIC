@@ -43,7 +43,7 @@
 #' @param anchor_cut Cutpoint for binarizing the anchor if it has more than
 #'   two unique non-missing values. Values >= `anchor_cut` are coded 1.
 #' @param B Number of bootstrap samples. Bootstrap CI is computed only if
-#'   `B > 100`.
+#'   `B >= 100`.
 #' @param report_every During bootstrapping, print progress every
 #'   `report_every` attempted fits.
 #' @param factor_name Name of the latent factor.
@@ -371,7 +371,7 @@ mim_threshold <- function(
   boot_success <- NULL
   ci <- NULL
 
-  if (!is.null(B) && B > 100L) {
+  if (!is.null(B) && B >= 100L) {
 
     B <- as.integer(B)
     n <- nrow(mydata)

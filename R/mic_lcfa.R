@@ -342,7 +342,7 @@ mic_lcfa <- function(
   MIC_CI <- NULL
   nboot <- 0L
 
-  if (B > 100L) {
+  if (B >= 100L) {
 
     boot <- rep(NA_real_, B)
 
