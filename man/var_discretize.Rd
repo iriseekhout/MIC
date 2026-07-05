@@ -8,7 +8,7 @@ var_discretize(
   x,
   n_levels = 10L,
   min_level = 1L,
-  require_all_levels = TRUE,
+  require_all_levels = FALSE,
   warn_unused = TRUE
 )
 }
