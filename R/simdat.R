@@ -1,44 +1,65 @@
-#' Simulates Time 1 and Time 2 PROM items and a transition rating vector
+#' Simulate longitudinal PROM data and a binary anchor
 #'
-#' Simulates Time 1 and Time 2 PROM item responses and a transition rating
-#' vector from an item response theory context.
+#' `simdat()` simulates Time 1 and Time 2 item responses for a 10-item PROM
+#' and a binary anchor / transition rating from an item response theory context.
+#' Each item has four ordered response categories scored 0, 1, 2, and 3, so
+#' the total PROM score ranges from 0 to 30 at each time point.
 #'
-#' R code adapted from supplementary materials of Terluin et al.
-#' Qual Life Res. 2024;33:963–973.
+#' The R code is adapted from supplementary materials of Terluin et al.
+#' Qual Life Res. 2024;33:963-973.
 #'
 #' @param N Integer. Sample size for simulation.
-#' @param par.mn.imic Numeric. Mean individual MIC. When 0.37425, corresponds
-#'   approximately to MIC 2.5 points on the raw scale.
-#' @param par.sd.imic Numeric. Standard deviation of individual MICs.
-#' @param rt1ch Numeric. Correlation between baseline theta and latent change.
-#' @param mean.tetchs Numeric. Mean latent change.
-#' @param par.sd.tetchs Numeric. Standard deviation of latent change.
-#' @param par.rel.trt Numeric. Transition rating reliability.
+#' @param mn_imic Numeric. Mean individual MIC on the latent theta-change scale.
+#'   For context, `mn_imic = 0.5` corresponds approximately to a raw-score MIC
+#'   of about 2.8 points, while `mn_imic = 0.37425` corresponds approximately
+#'   to a raw-score MIC of about 2.5 points on the 0-30 PROM scale.
+#' @param sd_imic Numeric. Standard deviation of individual MICs on the latent
+#'   theta-change scale.
+#' @param cor_t1_change Numeric. Correlation between baseline theta and latent
+#'   change.
+#' @param mean_tetch Numeric. Mean latent change.
+#' @param sd_tetch Numeric. Standard deviation of latent change.
+#' @param rel_trt Numeric. Reliability of perceived change used to generate
+#'   the binary anchor / transition rating.
 #' @param seed Optional integer. Random seed used to make the simulated data
 #'   reproducible. If `NULL`, the current random-number generator state is used.
+#' @param item_prefix Character. `"v"` names items as `v1_1`, ..., `v2_10`.
+#'   `"Item"` names items as `Item_1`, ..., `Item_10.1`.
+#' @param return_latent Logical. If `TRUE`, returns latent variables and item
+#'   parameters in the output object.
+#' @param xoc Logical. If `TRUE`, also adds `xoc`, a duplicate of the observed
+#'   change score `change`, to the returned data frame. Defaults to `FALSE`.
 #'
-#' @return A list of simulation summaries and a data frame with Time 1 items,
-#'   Time 2 items, transition rating `trat`, and observed PROM change score
-#'   `xoc`.
+#' @return A list containing the simulated data, simulation settings, item names,
+#'   truth / diagnostic quantities, and optionally latent variables and item
+#'   parameters.
 #'
 #' @export
 simdat <- function(
     N = 2000,
-    par.mn.imic = 0.37425,
-    par.sd.imic = 0.05,
-    rt1ch = -0.5,
-    mean.tetchs = 0.3,
-    par.sd.tetchs = 1.0,
-    par.rel.trt = 0.7,
-    seed = 1234
+    mn_imic = 0.37425,
+    sd_imic = 0.05,
+    cor_t1_change = -0.5,
+    mean_tetch = 0.3,
+    sd_tetch = 1.0,
+    rel_trt = 0.7,
+    seed = 1234,
+    item_prefix = c("v", "Item"),
+    return_latent = TRUE,
+    xoc = FALSE
 ) {
 
+  item_prefix <- match.arg(item_prefix)
+
   # -------------------------------------------------------------------------
-  # Optional reproducibility
+  # Reproducibility
   # -------------------------------------------------------------------------
+
   if (!is.null(seed)) {
-    if (!is.numeric(seed) || length(seed) != 1L || is.na(seed)) {
-      stop("`seed` must be a single non-missing numeric value.", call. = FALSE)
+
+    if (!is.numeric(seed) || length(seed) != 1L || is.na(seed) ||
+        !is.finite(seed) || seed != floor(seed)) {
+      stop("`seed` must be NULL or a single integer.", call. = FALSE)
     }
 
     old_seed_exists <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
@@ -59,8 +80,34 @@ simdat <- function(
   }
 
   # -------------------------------------------------------------------------
+  # Argument checks
+  # -------------------------------------------------------------------------
+
+  if (!is.numeric(N) || length(N) != 1L || is.na(N) ||
+      !is.finite(N) || N < 1L || N != floor(N)) {
+    stop("`N` must be a positive integer.", call. = FALSE)
+  }
+
+  N <- as.integer(N)
+
+  if (!is.numeric(rel_trt) || length(rel_trt) != 1L ||
+      is.na(rel_trt) || !is.finite(rel_trt) ||
+      rel_trt <= 0 || rel_trt > 1) {
+    stop("`rel_trt` must be > 0 and <= 1.", call. = FALSE)
+  }
+
+  if (!is.logical(return_latent) || length(return_latent) != 1L || is.na(return_latent)) {
+    stop("`return_latent` must be either TRUE or FALSE.", call. = FALSE)
+  }
+
+  if (!is.logical(xoc) || length(xoc) != 1L || is.na(xoc)) {
+    stop("`xoc` must be either TRUE or FALSE.", call. = FALSE)
+  }
+
+  # -------------------------------------------------------------------------
   # Item parameters
   # -------------------------------------------------------------------------
+
   b2 <- c(-0.8, -0.8, -0.4, -0.4, 0, 0, 0.4, 0.4, 0.8, 0.8)
   bc <- b2 / 4
 
@@ -68,30 +115,33 @@ simdat <- function(
   b3 <- b2 + 1 + sample(bc)
   a1 <- sample(1.7 + b2 / 2)
 
-  cf.simb <- as.matrix(data.frame(a1, b1, b2, b3))
-  cf.simb <- as.data.frame(cf.simb)
+  cf_simb <- as.data.frame(
+    data.frame(a1 = a1, b1 = b1, b2 = b2, b3 = b3)
+  )
 
-  # Transform b-parameters to d-parameters.
+  # Transform b-parameters to d-parameters for mirt.
   # difficulty b = easiness d / -a
-  cf.sim <- transform(
-    cf.simb,
+  cf_sim <- transform(
+    cf_simb,
     b1 = -b1 * a1,
     b2 = -b2 * a1,
     b3 = -b3 * a1
   )
 
-  colnames(cf.sim) <- c("a1", "d1", "d2", "d3")
+  colnames(cf_sim) <- c("a1", "d1", "d2", "d3")
 
-  a1 <- as.matrix(cf.sim[, 1])
-  d1 <- as.matrix(cf.sim[, -1])
+  a_mat <- as.matrix(cf_sim[, "a1", drop = FALSE])
+  d_mat <- as.matrix(cf_sim[, c("d1", "d2", "d3")])
 
   # -------------------------------------------------------------------------
   # Baseline theta and latent change
   # -------------------------------------------------------------------------
-  par.mn.tet1s <- 0
-  par.sd.tet1s <- 1
 
-  Sigma <- matrix(c(1, rt1ch, rt1ch, 1), 2, 2)
+  Sigma <- matrix(
+    c(1, cor_t1_change, cor_t1_change, 1),
+    nrow = 2,
+    ncol = 2
+  )
 
   tets <- MASS::mvrnorm(
     n = N,
@@ -99,88 +149,151 @@ simdat <- function(
     Sigma = Sigma
   )
 
-  tet1s <- tets[, 1] * par.sd.tet1s / stats::sd(tets[, 1])
-  tet1s <- tet1s - mean(tet1s) + par.mn.tet1s
-  tet1s <- as.matrix(tet1s)
+  theta_t1 <- tets[, 1]
+  theta_t1 <- theta_t1 / stats::sd(theta_t1)
+  theta_t1 <- theta_t1 - mean(theta_t1)
+  theta_t1 <- as.matrix(theta_t1)
+
+  theta_change <- tets[, 2]
+  theta_change <- theta_change - mean(theta_change)
+  theta_change <- theta_change / stats::sd(theta_change)
+  theta_change <- theta_change * sd_tetch
+  theta_change <- theta_change + mean_tetch
+
+  theta_t2 <- as.matrix(theta_t1 + theta_change)
+
+  # -------------------------------------------------------------------------
+  # Item responses
+  # -------------------------------------------------------------------------
 
   dat1 <- mirt::simdata(
-    a = a1,
-    d = d1,
+    a = a_mat,
+    d = d_mat,
     N = N,
     itemtype = "graded",
-    Theta = tet1s
+    Theta = theta_t1
+  )
+
+  dat2 <- mirt::simdata(
+    a = a_mat,
+    d = d_mat,
+    N = N,
+    itemtype = "graded",
+    Theta = theta_t2
   )
 
   dat1 <- as.data.frame(dat1)
-  xo1 <- rowSums(dat1)
-
-  # -------------------------------------------------------------------------
-  # Create theta change and Time 2 responses
-  # -------------------------------------------------------------------------
-  tetchs <- tets[, 2]
-
-  tetchs <- tetchs - mean(tetchs)
-  tetchs <- (tetchs / stats::sd(tetchs)) * par.sd.tetchs
-  tetchs <- tetchs + mean.tetchs
-
-  tet2s <- as.matrix(tet1s + tetchs)
-
-  dat2 <- mirt::simdata(
-    a = a1,
-    d = d1,
-    N = N,
-    itemtype = "graded",
-    Theta = tet2s
-  )
-
   dat2 <- as.data.frame(dat2)
-  xo2 <- rowSums(dat2)
 
-  xoc <- xo2 - xo1
-
-  # -------------------------------------------------------------------------
-  # Transition rating
-  # -------------------------------------------------------------------------
-  rel.trt <- par.rel.trt
-
-  sd.ch.error <- sqrt(((1 - rel.trt) / rel.trt) * stats::sd(tetchs)^2)
-
-  tetch.error <- stats::rnorm(N, 0, sd.ch.error)
-  tetch.prc <- tetchs + tetch.error
-
-  imic <- stats::rnorm(N, par.mn.imic, par.sd.imic)
-
-  trt <- numeric(N)
-  trt[tetch.prc > imic] <- 1
+  x <- rowSums(dat1)
+  y <- rowSums(dat2)
+  change <- y - x
 
   # -------------------------------------------------------------------------
-  # Assemble output data
+  # Anchor / transition rating
   # -------------------------------------------------------------------------
-  datw <- data.frame(dat1, dat2, trt)
 
-  nitems <- 0.5 * (ncol(datw) - 1)
-
-  item_names <- paste0(
-    "Item_",
-    c(seq_len(nitems), paste0(seq_len(nitems), ".1"))
+  sd_change_error <- sqrt(
+    ((1 - rel_trt) / rel_trt) *
+      stats::sd(theta_change)^2
   )
 
-  names(datw) <- c(item_names, "trat")
+  theta_change_error <- stats::rnorm(N, 0, sd_change_error)
+  perceived_change <- theta_change + theta_change_error
 
-  datw$xoc <- xoc
+  individual_mic <- stats::rnorm(N, mn_imic, sd_imic)
+
+  trat <- numeric(N)
+  trat[perceived_change > individual_mic] <- 1
+
+  empirical_rel_trt <- stats::var(theta_change) / stats::var(perceived_change)
 
   # -------------------------------------------------------------------------
-  # Output
+  # Assemble data
   # -------------------------------------------------------------------------
-  structure(
-    list(
-      seed = seed,
-      corr_tet1s_tet2s = stats::cor(tet1s, tet2s),
-      rel_prc = stats::var(tetchs) / stats::var(tetch.prc),
-      prop_improve = mean(trt > 0),
-      cor_xoc_trt = stats::cor(xoc, trt),
-      datw = datw
-    )
+
+  datw <- data.frame(dat1, dat2, trat)
+
+  nitems <- 10L
+
+  if (item_prefix == "v") {
+
+    names(datw)[seq_len(nitems)] <- paste0("v1_", seq_len(nitems))
+    names(datw)[nitems + seq_len(nitems)] <- paste0("v2_", seq_len(nitems))
+
+    t1_items <- paste0("v1_", seq_len(nitems))
+    t2_items <- paste0("v2_", seq_len(nitems))
+
+  } else {
+
+    names(datw)[seq_len(nitems)] <- paste0("Item_", seq_len(nitems))
+    names(datw)[nitems + seq_len(nitems)] <- paste0("Item_", seq_len(nitems), ".1")
+
+    t1_items <- paste0("Item_", seq_len(nitems))
+    t2_items <- paste0("Item_", seq_len(nitems), ".1")
+  }
+
+  names(datw)[2L * nitems + 1L] <- "trat"
+
+  datw$x <- x
+  datw$y <- y
+  datw$change <- change
+
+  if (isTRUE(xoc)) {
+    datw$xoc <- change
+  }
+
+  # -------------------------------------------------------------------------
+  # Verification quantities
+  # -------------------------------------------------------------------------
+
+  truth <- list(
+    target_rel_trt = rel_trt,
+    empirical_rel_trt = as.numeric(empirical_rel_trt),
+    latent_mic = mn_imic,
+    mean_individual_mic = mean(individual_mic),
+    sd_individual_mic = stats::sd(individual_mic),
+    mean_theta_change = mean(theta_change),
+    sd_theta_change = stats::sd(theta_change),
+    prop_improved = mean(trat == 1),
+    cor_change_anchor = stats::cor(change, trat),
+    cor_theta_t1_theta_t2 = stats::cor(as.vector(theta_t1), as.vector(theta_t2)),
+    cor_theta_change_anchor = stats::cor(theta_change, trat),
+    raw_score_range = c(0, 30)
   )
+
+  out <- list(
+    seed = seed,
+    settings = list(
+      N = N,
+      mn_imic = mn_imic,
+      sd_imic = sd_imic,
+      cor_t1_change = cor_t1_change,
+      mean_tetch = mean_tetch,
+      sd_tetch = sd_tetch,
+      rel_trt = rel_trt,
+      item_prefix = item_prefix,
+      xoc = xoc
+    ),
+    item_names = list(
+      t1_items = t1_items,
+      t2_items = t2_items,
+      anchor = "trat"
+    ),
+    truth = truth,
+    datw = datw
+  )
+
+  if (isTRUE(return_latent)) {
+    out$item_parameters_b <- cf_simb
+    out$item_parameters_d <- cf_sim
+    out$theta_t1 <- theta_t1
+    out$theta_t2 <- theta_t2
+    out$theta_change <- theta_change
+    out$perceived_change <- perceived_change
+    out$individual_mic <- individual_mic
+  }
+
+  out
 }
 
