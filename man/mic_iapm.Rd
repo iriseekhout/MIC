@@ -24,7 +24,7 @@ mic_iapm(
 
 \item{tr_rel}{Reliability of the transition rating estimated using \code{tr_reliability}.}
 
-\item{nboot}{Integer; number of bootstrapped samples when estimating the 95\% CI.  \code{nboot} must  > 100 to trigger the bootstrapping process.}
+\item{nboot}{Integer; number of bootstrapped samples when estimating the 95\% CI.  \code{nboot} must  >= 100 to trigger the bootstrapping process.}
 
 \item{report_every}{Integer. The interval at which the counter should be printed.}
 
@@ -36,8 +36,12 @@ A list of Predictive modeling-based MIC estimates
 \description{
 Based on methods developed by Terluin et al (2015), Terluin et al (2017), and Terluin et al (2022).
 }
-\examples{
+\seealso{
+Terluin B, Eekhout I, Terwee CB, de Vet HCW. Minimal important change (MIC) based on a predictive modeling approach was more precise than MIC based on ROC analysis. J Clin Epidemiol. 2015;68(12):1388-1396. doi:10.1016/j.jclinepi.2015.03.015
 
+Terluin B, Eekhout I, Terwee CB. The anchor-based minimal important change, based on receiver operating characteristic analysis or predictive modeling, may need to be adjusted for the proportion of improved patients. J Clin Epidemiol. 2017;83:90-100. doi:10.1016/j.jclinepi.2016.12.015
+
+Terluin B, Eekhout I, Terwee CB. Improved adjusted minimal important change took reliability of transition ratings into account. J Clin Epidemiol. 2022;148:48-53. doi:10.1016/j.jclinepi.2022.04.018
 
 drop additional classes (e.g. tbl_df and data.table
 progress indicator
@@ -45,11 +49,4 @@ prevalence adjustment
 MICs
 bootstrapped CIs for APM or iAPM
 bootstrapping initiated when nboot > 100
-}
-\seealso{
-Terluin B, Eekhout I, Terwee CB, de Vet HCW. Minimal important change (MIC) based on a predictive modeling approach was more precise than MIC based on ROC analysis. J Clin Epidemiol. 2015;68(12):1388-1396. doi:10.1016/j.jclinepi.2015.03.015
-
-Terluin B, Eekhout I, Terwee CB. The anchor-based minimal important change, based on receiver operating characteristic analysis or predictive modeling, may need to be adjusted for the proportion of improved patients. J Clin Epidemiol. 2017;83:90-100. doi:10.1016/j.jclinepi.2016.12.015
-
-Terluin B, Eekhout I, Terwee CB. Improved adjusted minimal important change took reliability of transition ratings into account. J Clin Epidemiol. 2022;148:48-53. doi:10.1016/j.jclinepi.2022.04.018
 }
