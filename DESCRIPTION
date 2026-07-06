@@ -11,7 +11,11 @@ Authors@R:
            person(given = "Berend",
            family = "Terluin",
            role = c("aut"),
-           email = "berend@terluin.net")
+           email = "berend@terluin.net"),
+           person(given = "Yong Hao",
+           family = "Pua",
+           role = c("aut"),
+           email = "puayonghao@gmail.com")
            )
 Description: Estimate the Minimal Important Change via different methodologies.
 Depends: R (>= 3.5.0)
