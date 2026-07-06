@@ -484,3 +484,76 @@ mic_iapm <- function(
 
   out
 }
+
+
+#' Extract anchor reliability
+#'
+#' Internal helper used by `mic_iapm()`.
+#'
+#' @noRd
+get_anchor_reliability <- function(x) {
+
+  if (is.null(x)) {
+    return(NULL)
+  }
+
+  # Numeric reliability supplied directly
+  if (is.numeric(x) && length(x) == 1L) {
+
+    rel <- as.numeric(x)
+
+  } else if (inherits(x, "tr_reliability")) {
+
+    # Object returned by tr_reliability()
+    if (!is.null(x$rel_anchor)) {
+      rel <- as.numeric(x$rel_anchor)
+    } else if (!is.null(x$reliability)) {
+      rel <- as.numeric(x$reliability)
+    } else {
+      stop(
+        "`anchor_reliability` is a `tr_reliability` object, but no ",
+        "`rel_anchor` or `reliability` element was found.",
+        call. = FALSE
+      )
+    }
+
+  } else if (is.list(x)) {
+
+    # Generic list fallback
+    if (!is.null(x$rel_anchor)) {
+      rel <- as.numeric(x$rel_anchor)
+    } else if (!is.null(x$reliability)) {
+      rel <- as.numeric(x$reliability)
+    } else {
+      stop(
+        "`anchor_reliability` was supplied as a list, but no ",
+        "`rel_anchor` or `reliability` element was found.",
+        call. = FALSE
+      )
+    }
+
+  } else {
+
+    stop(
+      "`anchor_reliability` must be either a numeric value or an object ",
+      "returned by `tr_reliability()`.",
+      call. = FALSE
+    )
+  }
+
+  if (length(rel) != 1L || is.na(rel) || !is.finite(rel)) {
+    stop(
+      "`anchor_reliability` must resolve to a single finite numeric value.",
+      call. = FALSE
+    )
+  }
+
+  if (rel <= 0 || rel > 1) {
+    stop(
+      "`anchor_reliability` must be greater than 0 and less than or equal to 1.",
+      call. = FALSE
+    )
+  }
+
+  rel
+}
