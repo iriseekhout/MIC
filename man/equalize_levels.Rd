@@ -9,7 +9,7 @@ equalize_levels(
   pair_by = c("position", "suffix"),
   t1_suffix = NULL,
   t2_suffix = NULL,
-  min_resp = 10L,
+  min_resp = 5L,
   shift_to_one = TRUE,
   shift_back = FALSE,
   verbose = TRUE,
