@@ -5,6 +5,11 @@
 #' Each item has four ordered response categories scored 0, 1, 2, and 3, so
 #' the total PROM score ranges from 0 to 30 at each time point.
 #'
+#' The returned data frame includes item-level responses, the binary anchor
+#' `trat`, the Time 1 summed PROM score `score_t1`, and the Time 2 summed PROM
+#' score `score_t2`. If `add_change = TRUE`, the observed change score
+#' `change = score_t2 - score_t1` is also added.
+#'
 #' The R code is adapted from supplementary materials of Terluin et al.
 #' Qual Life Res. 2024;33:963-973.
 #'
@@ -23,12 +28,10 @@
 #'   the binary anchor / transition rating.
 #' @param seed Optional integer. Random seed used to make the simulated data
 #'   reproducible. If `NULL`, the current random-number generator state is used.
-#' @param item_prefix Character. `"v"` names items as `v1_1`, ..., `v2_10`.
-#'   `"Item"` names items as `Item_1`, ..., `Item_10.1`.
 #' @param return_latent Logical. If `TRUE`, returns latent variables and item
 #'   parameters in the output object.
-#' @param xoc Logical. If `TRUE`, also adds `xoc`, a duplicate of the observed
-#'   change score `change`, to the returned data frame. Defaults to `FALSE`.
+#' @param add_change Logical. If `TRUE`, adds `change = score_t2 - score_t1`
+#'   to the returned data frame. Defaults to `FALSE`.
 #'
 #' @return A list containing the simulated data, simulation settings, item names,
 #'   truth / diagnostic quantities, and optionally latent variables and item
@@ -44,12 +47,9 @@ simdat <- function(
     sd_tetch = 1.0,
     rel_trt = 0.7,
     seed = 1234,
-    item_prefix = c("v", "Item"),
     return_latent = TRUE,
-    xoc = FALSE
+    add_change = FALSE
 ) {
-
-  item_prefix <- match.arg(item_prefix)
 
   # -------------------------------------------------------------------------
   # Reproducibility
@@ -100,8 +100,8 @@ simdat <- function(
     stop("`return_latent` must be either TRUE or FALSE.", call. = FALSE)
   }
 
-  if (!is.logical(xoc) || length(xoc) != 1L || is.na(xoc)) {
-    stop("`xoc` must be either TRUE or FALSE.", call. = FALSE)
+  if (!is.logical(add_change) || length(add_change) != 1L || is.na(add_change)) {
+    stop("`add_change` must be either TRUE or FALSE.", call. = FALSE)
   }
 
   # -------------------------------------------------------------------------
@@ -185,9 +185,8 @@ simdat <- function(
   dat1 <- as.data.frame(dat1)
   dat2 <- as.data.frame(dat2)
 
-  x <- rowSums(dat1)
-  y <- rowSums(dat2)
-  change <- y - x
+  score_t1 <- rowSums(dat1)
+  score_t2 <- rowSums(dat2)
 
   # -------------------------------------------------------------------------
   # Anchor / transition rating
@@ -216,36 +215,25 @@ simdat <- function(
 
   nitems <- 10L
 
-  if (item_prefix == "v") {
+  t1_items <- paste0("item", seq_len(nitems))
+  t2_items <- paste0("item", seq_len(nitems), ".1")
 
-    names(datw)[seq_len(nitems)] <- paste0("v1_", seq_len(nitems))
-    names(datw)[nitems + seq_len(nitems)] <- paste0("v2_", seq_len(nitems))
-
-    t1_items <- paste0("v1_", seq_len(nitems))
-    t2_items <- paste0("v2_", seq_len(nitems))
-
-  } else {
-
-    names(datw)[seq_len(nitems)] <- paste0("Item_", seq_len(nitems))
-    names(datw)[nitems + seq_len(nitems)] <- paste0("Item_", seq_len(nitems), ".1")
-
-    t1_items <- paste0("Item_", seq_len(nitems))
-    t2_items <- paste0("Item_", seq_len(nitems), ".1")
-  }
-
+  names(datw)[seq_len(nitems)] <- t1_items
+  names(datw)[nitems + seq_len(nitems)] <- t2_items
   names(datw)[2L * nitems + 1L] <- "trat"
 
-  datw$x <- x
-  datw$y <- y
-  datw$change <- change
+  datw$score_t1 <- score_t1
+  datw$score_t2 <- score_t2
 
-  if (isTRUE(xoc)) {
-    datw$xoc <- change
+  if (isTRUE(add_change)) {
+    datw$change <- datw$score_t2 - datw$score_t1
   }
 
   # -------------------------------------------------------------------------
   # Verification quantities
   # -------------------------------------------------------------------------
+
+  raw_change <- score_t2 - score_t1
 
   truth <- list(
     target_rel_trt = rel_trt,
@@ -256,7 +244,7 @@ simdat <- function(
     mean_theta_change = mean(theta_change),
     sd_theta_change = stats::sd(theta_change),
     prop_improved = mean(trat == 1),
-    cor_change_anchor = stats::cor(change, trat),
+    cor_change_anchor = stats::cor(raw_change, trat),
     cor_theta_t1_theta_t2 = stats::cor(as.vector(theta_t1), as.vector(theta_t2)),
     cor_theta_change_anchor = stats::cor(theta_change, trat),
     raw_score_range = c(0, 30)
@@ -272,8 +260,7 @@ simdat <- function(
       mean_tetch = mean_tetch,
       sd_tetch = sd_tetch,
       rel_trt = rel_trt,
-      item_prefix = item_prefix,
-      xoc = xoc
+      add_change = add_change
     ),
     item_names = list(
       t1_items = t1_items,
@@ -296,4 +283,3 @@ simdat <- function(
 
   out
 }
-
