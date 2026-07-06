@@ -2,46 +2,97 @@
 % Please edit documentation in R/tr_reliability.R
 \name{tr_reliability}
 \alias{tr_reliability}
-\title{Reliability for the Transition Rates}
+\title{Estimate anchor reliability using CFA}
 \usage{
-tr_reliability(data, model, modification = TRUE)
+tr_reliability(
+  data,
+  model = NULL,
+  anchor = NULL,
+  xsec = FALSE,
+  pair_by = c("position", "suffix"),
+  t1_suffix = NULL,
+  t2_suffix = NULL,
+  factor_names = NULL,
+  item_type = NULL,
+  continuous_items = NULL,
+  modification = TRUE,
+  mi_cut = 0.3,
+  complete_cases = TRUE,
+  print_model = TRUE,
+  verbose = TRUE,
+  ...
+)
 }
 \arguments{
-\item{data}{data.frame with variables that are in \code{model}}
+\item{data}{A data frame containing items and an anchor variable.}
 
-\item{model}{the model described using the \code{lavaan} model syntax. see model
-for the examples or \code{?lavaan::model.syntax}}
+\item{model}{Optional lavaan model syntax. If \code{NULL}, syntax is generated
+automatically using \code{tr_reliability_model()}.}
 
-\item{modification}{logical indicator if the modification index for the
-latent variables should be returned. if \code{modification = FALSE} only the
-reliability of the transition rating is returned.}
+\item{anchor}{Character. Name of the anchor variable. If \code{NULL}, the final
+column of \code{data} is treated as the anchor.}
+
+\item{xsec}{Logical. If \code{TRUE}, estimate cross-sectional anchor reliability.
+If \code{FALSE}, estimate longitudinal anchor / transition-rating reliability.}
+
+\item{pair_by}{Pairing method for longitudinal data. \code{"position"} assumes
+Time 1 items followed by Time 2 items. \code{"suffix"} detects pairs using
+\code{t1_suffix} and \code{t2_suffix}.}
+
+\item{t1_suffix}{Regex suffix identifying Time 1 items when
+\code{pair_by = "suffix"}.}
+
+\item{t2_suffix}{Regex suffix identifying Time 2 items when
+\code{pair_by = "suffix"}.}
+
+\item{factor_names}{Optional character vector of factor name(s). If \code{NULL},
+defaults to \code{"F1"} when \code{xsec = TRUE}, and \code{c("F1", "F2")} when
+\code{xsec = FALSE}.}
+
+\item{item_type}{Optional character. Type of items used as indicators.
+If \code{NULL}, defaults to \code{"ordinal"} unless \code{continuous_items} is supplied,
+in which case it defaults to \code{"mixed"}. \code{"ordinal"} treats all items and
+the anchor as ordered categorical variables. \code{"continuous"} treats all
+items as continuous while still treating the anchor as ordered. \code{"mixed"}
+treats all items as ordered except those listed in \code{continuous_items};
+the anchor is always treated as ordered.}
+
+\item{continuous_items}{Optional character vector of item names to treat as
+continuous. If supplied and \code{item_type = NULL}, \code{item_type} is automatically
+set to \code{"mixed"}. Do not include the anchor variable; it is always treated
+as ordered.}
+
+\item{modification}{Logical. If \code{TRUE}, return modification indices with
+\code{sepc.lv > mi_cut}.}
+
+\item{mi_cut}{Numeric. Cutoff for standardized latent-variable modification
+indices.}
+
+\item{complete_cases}{Logical. If \code{TRUE}, retain only complete cases before
+fitting the model.}
+
+\item{print_model}{Logical. If \code{TRUE}, print the generated lavaan syntax.}
+
+\item{verbose}{Logical. If \code{TRUE}, print progress messages.}
+
+\item{...}{Additional arguments passed to \code{lavaan::cfa()}.}
 }
 \value{
-\code{list} with reliability and modification index. if
-\code{modification = FALSE} only reliabilty is returned.
+An object of class \code{tr_reliability}.
 }
 \description{
-Reliability for the Transition Rates
+\code{tr_reliability()} estimates the reliability of an anchor or transition
+rating item using confirmatory factor analysis. The reliability estimate is
+the R-squared value of the anchor item from the fitted CFA model.
 }
-\examples{
-model <- '
-# Factors
-F1 =~ v1_1+v1_2+v1_3+v1_4+v1_5+v1_6+v1_7+v1_8+
-  v1_9+v1_10+trat
-F2 =~ v2_1+v2_2+v2_3+v2_4+v2_5+v2_6+v2_7+v2_8+
-  v2_9+v2_10+trat
+\details{
+The function follows the CFA approach described by Griffiths et al.
+J Clin Epidemiol. 2022;141:36-45. For longitudinal data, Time 1 items
+load on the first factor, Time 2 items load on the second factor, and
+the anchor loads on both factors. Residuals of corresponding items across
+time-points are allowed to correlate. No constraints are placed on loadings
+or thresholds.
 
-# Correlated errors over time
-v1_1 ~~ v2_1
-v1_2 ~~ v2_2
-v1_3 ~~ v2_3
-v1_4 ~~ v2_4
-v1_5 ~~ v2_5
-v1_6 ~~ v2_6
-v1_7 ~~ v2_7
-v1_8 ~~ v2_8
-v1_9 ~~ v2_9
-v1_10 ~~ v2_10
-'
-tr_reliability(data = example, model = model)
+For cross-sectional data, a one-factor CFA model is used, with the anchor
+item included as an indicator of the latent factor.
 }

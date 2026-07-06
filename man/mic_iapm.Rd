@@ -2,51 +2,79 @@
 % Please edit documentation in R/mic_iapm.R
 \name{mic_iapm}
 \alias{mic_iapm}
-\title{Predictive modeling-based, adjusted predictive modeling-based, and "improved" adjusted predictive modeling-based MICs and their attendant bootstrapped 95\% CIs
-This function could also be used to estimate the interpretation threshold of a predictor}
+\title{Estimate Predictive Modeling-Based MICs}
 \usage{
 mic_iapm(
   mypred,
   anchor,
   mydata,
-  tr_rel,
+  anchor_reliability = NULL,
   nboot = 0,
   report_every = 100,
-  verbose = FALSE
+  verbose = FALSE,
+  seed = NULL,
+  max_attempts = nboot * 5
 )
 }
 \arguments{
-\item{mypred}{Character vector; name of the column containing the change score or predictor score.}
+\item{mypred}{Character string; name of the column containing the change
+score or predictor score.}
 
-\item{anchor}{Character vector; name of the column containing the transition rating (perceived change).}
+\item{anchor}{Character string; name of the column containing the binary
+anchor. The anchor must be binary and coded as 0/1 or TRUE/FALSE.}
 
-\item{mydata}{Data.frame with the change score (or predictor score) and the transition rating in separate columns.}
+\item{mydata}{Data frame with the change score or predictor score and the
+anchor in separate columns.}
 
-\item{tr_rel}{Reliability of the transition rating estimated using \code{tr_reliability}.}
+\item{anchor_reliability}{Optional anchor reliability. Can be either a single
+numeric value between 0 and 1, or an object returned by \code{tr_reliability()}.
+If supplied, the improved adjusted predictive modeling-based MIC is also
+calculated.}
 
-\item{nboot}{Integer; number of bootstrapped samples when estimating the 95\% CI.  \code{nboot} must  >= 100 to trigger the bootstrapping process.}
+\item{nboot}{Integer; number of bootstrap samples for estimating the 95\%
+confidence interval. Bootstrapping is performed only when \code{nboot >= 100}.}
 
-\item{report_every}{Integer. The interval at which the counter should be printed.}
+\item{report_every}{Integer. The interval at which the bootstrap progress
+counter should be printed.}
 
-\item{verbose}{Logical. If TRUE, the counter is printed every \code{report_every} iterations. If FALSE, no counter is printed.}
+\item{verbose}{Logical. If \code{TRUE}, progress messages are printed.}
+
+\item{seed}{Optional integer seed for reproducible bootstrap confidence
+intervals.}
+
+\item{max_attempts}{Integer; maximum number of bootstrap attempts. This avoids
+an infinite loop when many bootstrap samples fail.}
 }
 \value{
-A list of Predictive modeling-based MIC estimates
+A list containing predictive modeling-based MIC estimates and,
+optionally, bootstrap confidence intervals.
 }
 \description{
-Based on methods developed by Terluin et al (2015), Terluin et al (2017), and Terluin et al (2022).
+Estimates predictive modeling-based, adjusted predictive modeling-based, and
+improved adjusted predictive modeling-based MICs, with optional bootstrap
+confidence intervals. This function can also be used to estimate the
+interpretation threshold of a predictor.
+}
+\details{
+Based on methods developed by Terluin et al. (2015), Terluin et al. (2017),
+and Terluin et al. (2022).
+}
+\references{
+Terluin B, Eekhout I, Terwee CB, de Vet HCW. Minimal important change
+(MIC) based on a predictive modeling approach was more precise than MIC
+based on ROC analysis. J Clin Epidemiol. 2015;68(12):1388-1396.
+doi:10.1016/j.jclinepi.2015.03.015
+
+Terluin B, Eekhout I, Terwee CB. The anchor-based minimal important change,
+based on receiver operating characteristic analysis or predictive modeling,
+may need to be adjusted for the proportion of improved patients.
+J Clin Epidemiol. 2017;83:90-100.
+doi:10.1016/j.jclinepi.2016.12.015
+
+Terluin B, Eekhout I, Terwee CB. Improved adjusted minimal important change
+took reliability of transition ratings into account. J Clin Epidemiol.
+2022;148:48-53. doi:10.1016/j.jclinepi.2022.04.018
 }
 \seealso{
-Terluin B, Eekhout I, Terwee CB, de Vet HCW. Minimal important change (MIC) based on a predictive modeling approach was more precise than MIC based on ROC analysis. J Clin Epidemiol. 2015;68(12):1388-1396. doi:10.1016/j.jclinepi.2015.03.015
-
-Terluin B, Eekhout I, Terwee CB. The anchor-based minimal important change, based on receiver operating characteristic analysis or predictive modeling, may need to be adjusted for the proportion of improved patients. J Clin Epidemiol. 2017;83:90-100. doi:10.1016/j.jclinepi.2016.12.015
-
-Terluin B, Eekhout I, Terwee CB. Improved adjusted minimal important change took reliability of transition ratings into account. J Clin Epidemiol. 2022;148:48-53. doi:10.1016/j.jclinepi.2022.04.018
-
-drop additional classes (e.g. tbl_df and data.table
-progress indicator
-prevalence adjustment
-MICs
-bootstrapped CIs for APM or iAPM
-bootstrapping initiated when nboot > 100
+\code{\link[=tr_reliability]{tr_reliability()}} for estimating anchor reliability using CFA.
 }
