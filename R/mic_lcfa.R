@@ -66,6 +66,29 @@
 #' @param verbose Logical. If `TRUE`, prints progress messages.
 #'
 #' @return A `mic_lcfa` object.
+#' @examples
+#' \dontrun{
+#' sim <- simdat(N = 500, seed = 123)
+#' dat <- sim$datw
+#'
+#' out <- mic_lcfa(
+#'   mydat = dat[, c(sim$item_names$t1_items,
+#'                   sim$item_names$t2_items,
+#'                   "trat")],
+#'   trt = "trat",
+#'   trt_cut = 1,
+#'   auto_equalize = TRUE,
+#'   pair_by = "suffix",
+#'   t1_suffix = "",
+#'   t2_suffix = "\\.1",
+#'   min_resp = 5,
+#'   B = 0,
+#'   print_model = FALSE,
+#'   verbose = FALSE
+#' )
+#'
+#' out
+#' }
 #'
 #' @export
 mic_lcfa <- function(

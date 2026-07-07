@@ -13,15 +13,28 @@
 #' the data if `!is.null(data)`
 #'
 #' @return vector with the predicted MIC value
-#' @export
+#'
+#' @details
+#' `mic_pred()` is a focused function for estimating the
+#' predictive modeling-based MIC. For an all-in-one workflow that returns the
+#' predictive MIC, adjusted predictive MIC, and improved adjusted predictive MIC
+#' with optional bootstrap confidence intervals, see [mic_iapm()].
+#'
+#' @seealso [mic_iapm()]
 #'
 #' @examples
+#'
+#' data(example)
 #' nitems <- 10
 #' example$x <- rowSums(example[,1:nitems])                 # sumscore T1
 #' example$y <- rowSums(example[,(nitems+1):(2*nitems)])    # sumscore T2
 #' mic_pred(x = example$x, y = example$y, tr = example$trat)
 #' mic_pred(data = example, x = example$x, y = example$y, tr = example$trat)
 #' mic_pred(data = example, x = "x", y = "y", tr = "trat")
+#'
+#' # For predictive, adjusted, and improved adjusted MICs in one workflow,
+#' # see mic_iapm().
+#' @export
 mic_pred <- function(data = NULL, x, y , tr){
 
   if(!is.null(data) & !is.character(x) & !is.character(y) & !is.character(tr)){
