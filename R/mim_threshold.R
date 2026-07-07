@@ -4,10 +4,11 @@
 #' a multi-item measure (MIM) using a one-factor CFA model with an anchor/transition
 #' rating item. This technique is based on
 #'
-#' [1] Terluin, B., Koopman, J.E., Hoogendam, L. et al. Estimating meaningful thresholds
+#' @references
+#' Terluin, B., Koopman, J.E., Hoogendam, L. et al. Estimating meaningful thresholds
 #' for multi-item questionnaires using item response theory. Qual Life Res 32, 1819–1830 (2023)
 #'
-#' [2] Terluin, B., Trigg, A., Fromy, P. et al. Estimating anchor-based minimal important
+#' Terluin, B., Trigg, A., Fromy, P. et al. Estimating anchor-based minimal important
 #'  change using longitudinal confirmatory factor analysis. Qual Life Res 33, 963–973 (2024).
 #'
 #' The model formula takes the form:
@@ -58,7 +59,22 @@
 #'
 #' @return A `mim_threshold` object. Additional details can be retrieved with
 #'   `mim_threshold_details()`.
+#' @examples
+#' \dontrun{
+#' sim <- simdat(N = 500, seed = 123)
+#' dat <- sim$datw
+#' t1_items <- sim$item_names$t1_items
 #'
+#' dat_t1 <- dat[, c(t1_items, "trat")]
+#'
+#' out <- mim_threshold(
+#'   mydata = dat_t1,
+#'   var_formula = trat ~ .,
+#'   B = 0
+#' )
+#'
+#' out
+#' }
 #' @export
 mim_threshold <- function(
     mydata,
