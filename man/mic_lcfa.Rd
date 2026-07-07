@@ -95,6 +95,31 @@ This implementation follows the updated recommendation that the transition
 rating loadings should be freely estimated; that is, the constraint
 \code{f1 == -f2} is not applied.
 }
+\examples{
+\dontrun{
+sim <- simdat(N = 500, seed = 123)
+dat <- sim$datw
+
+out <- mic_lcfa(
+  mydat = dat[, c(sim$item_names$t1_items,
+                  sim$item_names$t2_items,
+                  "trat")],
+  trt = "trat",
+  trt_cut = 1,
+  auto_equalize = TRUE,
+  pair_by = "suffix",
+  t1_suffix = "",
+  t2_suffix = "\\\\.1",
+  min_resp = 5,
+  B = 0,
+  print_model = FALSE,
+  verbose = FALSE
+)
+
+out
+}
+
+}
 \references{
 Terluin, B., Fromy, P., Trigg, A., Terwee, C.B., & Bjorner, J.B.
 Effect of present state bias on minimal important change estimates:

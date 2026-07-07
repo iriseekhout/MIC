@@ -2,7 +2,7 @@
 % Please edit documentation in R/mic_iapm.R
 \name{mic_iapm}
 \alias{mic_iapm}
-\title{Estimate Predictive Modeling-Based MICs}
+\title{Estimate Predictive Modeling-Based MICs and thresholds}
 \usage{
 mic_iapm(
   mypred,
@@ -31,11 +31,11 @@ numeric value between 0 and 1, or an object returned by \code{tr_reliability()}.
 If supplied, the improved adjusted predictive modeling-based MIC is also
 calculated.}
 
-\item{nboot}{Integer; number of bootstrap samples for estimating the 95\%
-confidence interval. Bootstrapping is performed only when \code{nboot >= 100}.}
+\item{nboot}{Integer; number of bootstrap samples for estimating 95\%
+confidence intervals. Bootstrapping is performed only when \code{nboot >= 100}.}
 
-\item{report_every}{Integer. The interval at which the bootstrap progress
-counter should be printed.}
+\item{report_every}{Integer. The interval at which bootstrap progress should
+be printed.}
 
 \item{verbose}{Logical. If \code{TRUE}, progress messages are printed.}
 
@@ -46,18 +46,48 @@ intervals.}
 an infinite loop when many bootstrap samples fail.}
 }
 \value{
-A list containing predictive modeling-based MIC estimates and,
-optionally, bootstrap confidence intervals.
+A \code{mic_iapm} object containing:
+\describe{
+\item{mic_pm}{Predictive modeling-based MIC.}
+\item{mic_apm}{Adjusted predictive modeling-based MIC.}
+\item{mic_iapm}{Improved adjusted predictive modeling-based MIC, returned
+only when \code{anchor_reliability} is supplied.}
+\item{mic_pm_ci}{Bootstrap confidence interval for \code{mic_pm}, if requested.}
+\item{mic_apm_ci}{Bootstrap confidence interval for \code{mic_apm}, if requested.}
+\item{mic_iapm_ci}{Bootstrap confidence interval for \code{mic_iapm}, if
+requested and \code{anchor_reliability} is supplied.}
+\item{mic_ci}{Matrix of available MIC estimates and confidence intervals.}
+\item{anchor_reliability}{Anchor reliability used in the iAPM calculation.}
+\item{nboot}{Requested number of bootstrap samples.}
+\item{n_successful_boot}{Number of successful bootstrap samples.}
+}
 }
 \description{
-Estimates predictive modeling-based, adjusted predictive modeling-based, and
-improved adjusted predictive modeling-based MICs, with optional bootstrap
-confidence intervals. This function can also be used to estimate the
+Estimates (i) predictive modeling-based, (ii) adjusted predictive modeling-based, and
+(iii) improved adjusted predictive modeling-based MICs, with optional bootstrap
+confidence intervals. \code{mic_iapm} can also be used to estimate the
 interpretation threshold of a predictor.
 }
 \details{
 Based on methods developed by Terluin et al. (2015), Terluin et al. (2017),
 and Terluin et al. (2022).
+
+If \code{nboot >= 100}, bootstrap confidence intervals are computed for the
+predictive MIC and adjusted predictive MIC. If \code{anchor_reliability} is
+supplied, a bootstrap confidence interval is also computed for the improved
+adjusted predictive MIC.
+}
+\examples{
+sim <- simdat(N = 300, seed = 123, add_change = TRUE)
+dat <- sim$datw
+
+mic_iapm(
+  mypred = "change",
+  anchor = "trat",
+  mydata = dat,
+  anchor_reliability = sim$truth$empirical_rel_trt,
+  nboot = 0
+)
 }
 \references{
 Terluin B, Eekhout I, Terwee CB, de Vet HCW. Minimal important change
@@ -76,5 +106,5 @@ took reliability of transition ratings into account. J Clin Epidemiol.
 2022;148:48-53. doi:10.1016/j.jclinepi.2022.04.018
 }
 \seealso{
-\code{\link[=tr_reliability]{tr_reliability()}} for estimating anchor reliability using CFA.
+\code{\link[=tr_reliability]{tr_reliability()}}
 }

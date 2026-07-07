@@ -114,3 +114,21 @@ psb := (f1/f2) + 1
 b_param := thr.trt/f2
 }
 }
+\examples{
+sim <- simdat(N = 100, seed = 123)
+dat <- sim$datw
+
+mod <- lcfa_model(
+  data = dat[, c(sim$item_names$t1_items,
+                 sim$item_names$t2_items,
+                 "trat")],
+  trt = "trat",
+  pair_by = "suffix",
+  t1_suffix = "",
+  t2_suffix = "\\\\.1",
+  print_model = FALSE
+)
+
+mod$model
+
+}

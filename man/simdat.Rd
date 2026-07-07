@@ -67,3 +67,10 @@ score \code{score_t2}. If \code{add_change = TRUE}, the observed change score
 The R code is adapted from supplementary materials of Terluin et al.
 Qual Life Res. 2024;33:963-973.
 }
+\examples{
+sim <- simdat(N = 200, seed = 123, add_change = TRUE)
+
+names(sim$datw)
+sim$truth
+
+}

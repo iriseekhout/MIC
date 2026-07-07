@@ -47,6 +47,7 @@ only for item pairs that required collapsing or equalization.}
 }
 \value{
 A list with components:
+\describe{
 \item{data}{The processed data frame, ordered as T1 items followed by T2 items.}
 \item{shift}{The global shift applied to item responses.}
 \item{pair_map}{A data frame describing matched T1/T2 item pairs.}
@@ -67,91 +68,21 @@ collapsed consistently within each item pair.
 Item pairs can be detected either by column position or by suffix patterns.
 }
 \examples{
-# Position-based pairing:
-# equalize_levels(dat_items, pair_by = "position")
-
-# Suffix-based pairing: item1.t1, item1.t2
-# equalize_levels(dat_items, pair_by = "suffix",
-#                 t1_suffix = "\\.t1", t2_suffix = "\\.t2")
-
-# Suffix-based pairing: item1, item1.1
-# equalize_levels(dat_items, pair_by = "suffix",
-#                 t1_suffix = "", t2_suffix = "\\.1")
-
-# ------------------------------------------------------------
-# Example 1: Position-based pairing
-# ------------------------------------------------------------
-# Data are ordered as:
-#   T1 item 1, T1 item 2, ..., T2 item 1, T2 item 2, ...
-
-dat_pos <- data.frame(
-  item1_t1 = c(1, 1, 2, 2, 3, 3, 3, NA),
-  item2_t1 = c(1, 2, 2, 3, 3, 3, 4, 4),
-  item1_t2 = c(1, 2, 2, 2, 3, 4, 4, NA),
-  item2_t2 = c(1, 1, 2, 2, 3, 4, 4, 4)
-)
-
-eq_pos <- equalize_levels(
-  data = dat_pos,
-  pair_by = "position",
-  min_resp = 2,
-  shift_to_one = FALSE,
-  print_tables = TRUE
-)
-
-eq_pos$data
-
-
-# ------------------------------------------------------------
-# Example 2: Suffix-based pairing with .t1 and .t2
-# ------------------------------------------------------------
-# Data columns do not need to be ordered as T1 block followed by T2 block.
-# Item pairs are detected using suffix patterns.
-
-dat_suffix <- data.frame(
-  pain.t1 = c(3, 3, 3, 4, 4, 5, 5, 5),
-  fatigue.t1 = c(1, 1, 2, 2, 3, 3, 3, 4),
-  pain.t2 = c(1, 2, 3, 3, 4, 4, 6, 8),
-  fatigue.t2 = c(1, 2, 2, 2, 3, 4, 4, 4)
-)
-
-eq_suffix <- equalize_levels(
-  data = dat_suffix,
-  pair_by = "suffix",
-  t1_suffix = "\\\\.t1",
-  t2_suffix = "\\\\.t2",
-  min_resp = 2,
-  shift_to_one = FALSE,
-  print_tables = TRUE
-)
-
-eq_suffix$pair_map
-eq_suffix$summary
-eq_suffix$data
-
-
-# ------------------------------------------------------------
-# Example 3: Suffix-based pairing with item and item.1
-# ------------------------------------------------------------
-# Here Time 1 items have no suffix and Time 2 items use ".1".
-
-dat_dot1 <- data.frame(
+dat <- data.frame(
   item1 = c(1, 1, 2, 2, 3, 3, 3, 4),
   item2 = c(1, 2, 2, 3, 3, 3, 4, 4),
   item1.1 = c(1, 2, 2, 2, 3, 4, 4, 4),
   item2.1 = c(1, 1, 2, 2, 3, 4, 4, 4)
 )
 
-eq_dot1 <- equalize_levels(
-  data = dat_dot1,
+out <- equalize_levels(
+  data = dat,
   pair_by = "suffix",
   t1_suffix = "",
   t2_suffix = "\\\\.1",
   min_resp = 2,
   shift_to_one = FALSE,
-  print_tables = TRUE
+  verbose = FALSE,
+  print_tables = FALSE
 )
-
-
-
 }

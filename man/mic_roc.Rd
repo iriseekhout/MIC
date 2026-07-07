@@ -2,34 +2,85 @@
 % Please edit documentation in R/mic_roc.R
 \name{mic_roc}
 \alias{mic_roc}
-\title{ROC based Minimal Important Change (MIC)}
+\title{ROC-Based Minimal Important Change}
 \usage{
-mic_roc(data = NULL, x, y, tr)
+mic_roc(
+  data = NULL,
+  x,
+  y,
+  tr,
+  nboot = 0,
+  report_every = 100,
+  verbose = FALSE,
+  seed = NULL,
+  max_attempts = nboot * 5
+)
 }
 \arguments{
-\item{data}{data.frame that holds the scores at two time points and the
-transition rate in separate columns.}
+\item{data}{Optional data frame containing the Time 1 score, Time 2 score,
+and binary anchor.}
 
-\item{x}{vector with score at time point 1, or column name in the data if
-\code{!is.null(data)}}
+\item{x}{Numeric vector of scores at Time 1, or character name of the Time 1
+score column in \code{data}.}
 
-\item{y}{vector with score at time point 1, or column name in the data if
-\code{!is.null(data)}}
+\item{y}{Numeric vector of scores at Time 2, or character name of the Time 2
+score column in \code{data}.}
 
-\item{tr}{vector with transition rates (perceived change), or column name in
-the data if \code{!is.null(data)}}
+\item{tr}{Binary anchor vector, or character name of the anchor column in
+\code{data}. The anchor must be coded as 0/1 or TRUE/FALSE.}
+
+\item{nboot}{Integer. Number of bootstrap samples for estimating the 95\%
+confidence interval. Bootstrapping is performed only when \code{nboot >= 100}.}
+
+\item{report_every}{Integer. The interval at which bootstrap progress should
+be printed.}
+
+\item{verbose}{Logical. If \code{TRUE}, progress messages are printed.}
+
+\item{seed}{Optional integer seed for reproducible bootstrap confidence
+intervals.}
+
+\item{max_attempts}{Integer. Maximum number of bootstrap attempts. This avoids
+an infinite loop when many bootstrap samples fail.}
 }
 \value{
-vector with the ROC-based MIC value
+A \code{mic_roc} object containing the ROC-based MIC and, optionally,
+bootstrap confidence intervals.
 }
 \description{
-Minimal Important Change (MIC) obtained via the ROC.
+Estimates the minimal important change (MIC) using receiver operating
+characteristic (ROC) analysis. The MIC is estimated as the change-score
+threshold that optimizes the Youden criterion.
+}
+\details{
+Optional bootstrap confidence intervals can be requested by setting
+\code{nboot >= 100}.
 }
 \examples{
+data(example)
+
 nitems <- 10
-example$x <- rowSums(example[,1:nitems])                 # sumscore T1
-example$y <- rowSums(example[,(nitems+1):(2*nitems)])    # sumscore T2
-mic_roc(x = example$x, y = example$y, tr = example$trat)
-mic_roc(data = example, x = example$x, y = example$y, tr = example$trat)
-mic_roc(data = example, x = "x", y = "y", tr = "trat")
+
+example$score_t1 <- rowSums(example[, paste0("v1_", seq_len(nitems))])
+example$score_t2 <- rowSums(example[, paste0("v2_", seq_len(nitems))])
+
+mic_roc(
+  data = example,
+  x = "score_t1",
+  y = "score_t2",
+  tr = "trat",
+  nboot = 0
+)
+
+\dontrun{
+mic_roc(
+  data = example,
+  x = "score_t1",
+  y = "score_t2",
+  tr = "trat",
+  nboot = 500,
+  seed = 123
+)
+}
+
 }

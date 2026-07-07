@@ -40,3 +40,11 @@ Missing values are allowed. They are ignored when computing the
 discretization range and are preserved as \code{NA_integer_} in the returned
 score vector.
 }
+\examples{
+x <- 0:24
+
+out <- var_discretize(x, n_levels = 10)
+
+out$score
+out$midpoints
+}

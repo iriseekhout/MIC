@@ -96,3 +96,26 @@ or thresholds.
 For cross-sectional data, a one-factor CFA model is used, with the anchor
 item included as an indicator of the latent factor.
 }
+\examples{
+\dontrun{
+sim <- simdat(N = 300, seed = 123)
+dat <- sim$datw
+
+rel <- tr_reliability(
+  data = dat[, c(sim$item_names$t1_items,
+                 sim$item_names$t2_items,
+                 "trat")],
+  anchor = "trat",
+  xsec = FALSE,
+  pair_by = "suffix",
+  t1_suffix = "",
+  t2_suffix = "\\\\.1",
+  item_type = "ordinal",
+  modification = FALSE,
+  print_model = FALSE
+)
+
+rel
+}
+
+}

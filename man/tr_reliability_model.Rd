@@ -59,3 +59,18 @@ For cross-sectional data, a one-factor model is generated. For longitudinal
 data, a two-factor model is generated, with the anchor loading on both
 Time 1 and Time 2 factors.
 }
+\examples{
+sim <- simdat(N = 200, seed = 123)
+dat <- sim$datw
+
+tr_reliability_model(
+  data = dat[, c(sim$item_names$t1_items,
+                 sim$item_names$t2_items,
+                 "trat")],
+  anchor = "trat",
+  xsec = FALSE,
+  pair_by = "suffix",
+  t1_suffix = "",
+  t2_suffix = "\\\\.1"
+)
+}
