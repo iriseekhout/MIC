@@ -61,6 +61,22 @@
 #'
 #' @return An object of class `lcfa_model`, invisibly. The generated lavaan
 #'   syntax can be accessed using `$model`.
+#' @examples
+#' sim <- simdat(N = 100, seed = 123)
+#' dat <- sim$datw
+#'
+#' mod <- lcfa_model(
+#'   data = dat[, c(sim$item_names$t1_items,
+#'                  sim$item_names$t2_items,
+#'                  "trat")],
+#'   trt = "trat",
+#'   pair_by = "suffix",
+#'   t1_suffix = "",
+#'   t2_suffix = "\\.1",
+#'   print_model = FALSE
+#' )
+#'
+#' mod$model
 #'
 #' @export
 lcfa_model <- function(
