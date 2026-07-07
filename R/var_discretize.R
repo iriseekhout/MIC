@@ -19,7 +19,13 @@
 #'
 #' @return A list containing the discretized score, bin midpoints, bin edges,
 #'   used levels, and unused levels.
+#' @examples
+#' x <- 0:24
 #'
+#' out <- var_discretize(x, n_levels = 10)
+#'
+#' out$score
+#' out$midpoints
 #' @export
 var_discretize <- function(
     x,

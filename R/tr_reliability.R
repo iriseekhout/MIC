@@ -54,6 +54,28 @@
 #'
 #' @return An object of class `tr_reliability`.
 #'
+#' @examples
+#' \dontrun{
+#' sim <- simdat(N = 300, seed = 123)
+#' dat <- sim$datw
+#'
+#' rel <- tr_reliability(
+#'   data = dat[, c(sim$item_names$t1_items,
+#'                  sim$item_names$t2_items,
+#'                  "trat")],
+#'   anchor = "trat",
+#'   xsec = FALSE,
+#'   pair_by = "suffix",
+#'   t1_suffix = "",
+#'   t2_suffix = "\\.1",
+#'   item_type = "ordinal",
+#'   modification = FALSE,
+#'   print_model = FALSE
+#' )
+#'
+#' rel
+#' }
+#'
 #' @export
 tr_reliability <- function(
     data,

@@ -33,6 +33,20 @@
 #' @return An object of class `tr_reliability_model`. The lavaan syntax can be
 #'   accessed using `$model`.
 #'
+#' @examples
+#' sim <- simdat(N = 200, seed = 123)
+#' dat <- sim$datw
+#'
+#' tr_reliability_model(
+#'   data = dat[, c(sim$item_names$t1_items,
+#'                  sim$item_names$t2_items,
+#'                  "trat")],
+#'   anchor = "trat",
+#'   xsec = FALSE,
+#'   pair_by = "suffix",
+#'   t1_suffix = "",
+#'   t2_suffix = "\\.1"
+#' )
 #' @export
 tr_reliability_model <- function(
     data,
