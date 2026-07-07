@@ -1,12 +1,17 @@
-#' Estimate Predictive Modeling-Based MICs
+#' Estimate Predictive Modeling-Based MICs and thresholds
 #'
-#' Estimates predictive modeling-based, adjusted predictive modeling-based, and
-#' improved adjusted predictive modeling-based MICs, with optional bootstrap
-#' confidence intervals. This function can also be used to estimate the
+#' Estimates (i) predictive modeling-based, (ii) adjusted predictive modeling-based, and
+#' (iii) improved adjusted predictive modeling-based MICs, with optional bootstrap
+#' confidence intervals. `mic_iapm` can also be used to estimate the
 #' interpretation threshold of a predictor.
 #'
 #' Based on methods developed by Terluin et al. (2015), Terluin et al. (2017),
 #' and Terluin et al. (2022).
+#'
+#' If `nboot >= 100`, bootstrap confidence intervals are computed for the
+#' predictive MIC and adjusted predictive MIC. If `anchor_reliability` is
+#' supplied, a bootstrap confidence interval is also computed for the improved
+#' adjusted predictive MIC.
 #'
 #' @param mypred Character string; name of the column containing the change
 #'   score or predictor score.
@@ -18,18 +23,31 @@
 #'   numeric value between 0 and 1, or an object returned by `tr_reliability()`.
 #'   If supplied, the improved adjusted predictive modeling-based MIC is also
 #'   calculated.
-#' @param nboot Integer; number of bootstrap samples for estimating the 95%
-#'   confidence interval. Bootstrapping is performed only when `nboot >= 100`.
-#' @param report_every Integer. The interval at which the bootstrap progress
-#'   counter should be printed.
+#' @param nboot Integer; number of bootstrap samples for estimating 95%
+#'   confidence intervals. Bootstrapping is performed only when `nboot >= 100`.
+#' @param report_every Integer. The interval at which bootstrap progress should
+#'   be printed.
 #' @param verbose Logical. If `TRUE`, progress messages are printed.
 #' @param seed Optional integer seed for reproducible bootstrap confidence
 #'   intervals.
 #' @param max_attempts Integer; maximum number of bootstrap attempts. This avoids
 #'   an infinite loop when many bootstrap samples fail.
 #'
-#' @return A list containing predictive modeling-based MIC estimates and,
-#'   optionally, bootstrap confidence intervals.
+#' @return A `mic_iapm` object containing:
+#' \describe{
+#'   \item{mic_pm}{Predictive modeling-based MIC.}
+#'   \item{mic_apm}{Adjusted predictive modeling-based MIC.}
+#'   \item{mic_iapm}{Improved adjusted predictive modeling-based MIC, returned
+#'   only when `anchor_reliability` is supplied.}
+#'   \item{mic_pm_ci}{Bootstrap confidence interval for `mic_pm`, if requested.}
+#'   \item{mic_apm_ci}{Bootstrap confidence interval for `mic_apm`, if requested.}
+#'   \item{mic_iapm_ci}{Bootstrap confidence interval for `mic_iapm`, if
+#'   requested and `anchor_reliability` is supplied.}
+#'   \item{mic_ci}{Matrix of available MIC estimates and confidence intervals.}
+#'   \item{anchor_reliability}{Anchor reliability used in the iAPM calculation.}
+#'   \item{nboot}{Requested number of bootstrap samples.}
+#'   \item{n_successful_boot}{Number of successful bootstrap samples.}
+#' }
 #'
 #' @references
 #' Terluin B, Eekhout I, Terwee CB, de Vet HCW. Minimal important change
@@ -47,9 +65,21 @@
 #' took reliability of transition ratings into account. J Clin Epidemiol.
 #' 2022;148:48-53. doi:10.1016/j.jclinepi.2022.04.018
 #'
-#' @seealso [tr_reliability()] for estimating anchor reliability using CFA.
+#' @seealso [tr_reliability()]
 #'
 #' @export
+#'
+#' @examples
+#' sim <- simdat(N = 300, seed = 123, add_change = TRUE)
+#' dat <- sim$datw
+#'
+#' mic_iapm(
+#'   mypred = "change",
+#'   anchor = "trat",
+#'   mydata = dat,
+#'   anchor_reliability = sim$truth$empirical_rel_trt,
+#'   nboot = 0
+#' )
 mic_iapm <- function(
     mypred,
     anchor,
@@ -62,9 +92,11 @@ mic_iapm <- function(
     max_attempts = nboot * 5
 ) {
 
+  mic_pm_ci <- NULL
+  mic_apm_ci <- NULL
+  mic_iapm_ci <- NULL
   mic_ci <- NULL
-  mic_adj_ci <- NULL
-  n_successful_boot <- 0
+  n_successful_boot <- 0L
 
   # -------------------------------------------------------------------------
   # Validate `mydata`
@@ -80,21 +112,21 @@ mic_iapm <- function(
   # Validate column names
   # -------------------------------------------------------------------------
 
-  if (!is.character(mypred) || length(mypred) != 1) {
+  if (!is.character(mypred) || length(mypred) != 1L) {
     stop(
       "`mypred` must be a single character string naming a column in `mydata`.",
       call. = FALSE
     )
   }
 
-  if (!is.character(anchor) || length(anchor) != 1) {
+  if (!is.character(anchor) || length(anchor) != 1L) {
     stop(
       "`anchor` must be a single character string naming a column in `mydata`.",
       call. = FALSE
     )
   }
 
-  if (!all(c(mypred, anchor) %in% colnames(mydata))) {
+  if (!all(c(mypred, anchor) %in% names(mydata))) {
     stop(
       "`anchor` and/or `mypred` were not found in `mydata`.",
       call. = FALSE
@@ -108,22 +140,26 @@ mic_iapm <- function(
   # Validate general arguments
   # -------------------------------------------------------------------------
 
-  if (!is.logical(verbose) || length(verbose) != 1 || is.na(verbose)) {
+  if (!is.logical(verbose) || length(verbose) != 1L || is.na(verbose)) {
     stop("`verbose` must be either TRUE or FALSE.", call. = FALSE)
   }
 
-  if (!is.numeric(nboot) || length(nboot) != 1 || is.na(nboot) ||
+  if (!is.numeric(nboot) || length(nboot) != 1L || is.na(nboot) ||
       !is.finite(nboot) || nboot < 0 || nboot != floor(nboot)) {
     stop("`nboot` must be a single non-negative integer.", call. = FALSE)
   }
 
-  if (!is.numeric(report_every) || length(report_every) != 1 ||
+  nboot <- as.integer(nboot)
+
+  if (!is.numeric(report_every) || length(report_every) != 1L ||
       is.na(report_every) || !is.finite(report_every) ||
       report_every < 1 || report_every != floor(report_every)) {
     stop("`report_every` must be a single positive integer.", call. = FALSE)
   }
 
-  if (!is.numeric(max_attempts) || length(max_attempts) != 1 ||
+  report_every <- as.integer(report_every)
+
+  if (!is.numeric(max_attempts) || length(max_attempts) != 1L ||
       is.na(max_attempts) || !is.finite(max_attempts) ||
       max_attempts < 0 || max_attempts != floor(max_attempts)) {
     stop(
@@ -132,7 +168,9 @@ mic_iapm <- function(
     )
   }
 
-  if (nboot >= 100 && max_attempts < nboot) {
+  max_attempts <- as.integer(max_attempts)
+
+  if (nboot >= 100L && max_attempts < nboot) {
     stop(
       "`max_attempts` must be greater than or equal to `nboot` when bootstrapping.",
       call. = FALSE
@@ -140,7 +178,7 @@ mic_iapm <- function(
   }
 
   if (!is.null(seed)) {
-    if (!is.numeric(seed) || length(seed) != 1 || is.na(seed) ||
+    if (!is.numeric(seed) || length(seed) != 1L || is.na(seed) ||
         !is.finite(seed) || seed != floor(seed)) {
       stop("`seed` must be NULL or a single integer.", call. = FALSE)
     }
@@ -151,26 +189,6 @@ mic_iapm <- function(
   # -------------------------------------------------------------------------
 
   rel_anchor_value <- get_anchor_reliability(anchor_reliability)
-
-  if (!is.null(rel_anchor_value)) {
-
-    if (!is.numeric(rel_anchor_value) ||
-        length(rel_anchor_value) != 1 ||
-        is.na(rel_anchor_value) ||
-        !is.finite(rel_anchor_value)) {
-      stop(
-        "`anchor_reliability` must resolve to a single finite numeric value.",
-        call. = FALSE
-      )
-    }
-
-    if (rel_anchor_value <= 0 || rel_anchor_value > 1) {
-      stop(
-        "`anchor_reliability` must be greater than 0 and less than or equal to 1.",
-        call. = FALSE
-      )
-    }
-  }
 
   # -------------------------------------------------------------------------
   # Validate predictor and anchor
@@ -210,7 +228,7 @@ mic_iapm <- function(
   complete_rows <- stats::complete.cases(tmpdata)
   n_removed <- sum(!complete_rows)
 
-  if (n_removed > 0) {
+  if (n_removed > 0L) {
     warning(
       n_removed,
       " row(s) with missing values were removed.",
@@ -220,11 +238,11 @@ mic_iapm <- function(
 
   tmpdata <- tmpdata[complete_rows, , drop = FALSE]
 
-  if (nrow(tmpdata) < 2) {
+  if (nrow(tmpdata) < 2L) {
     stop("At least two complete observations are required.", call. = FALSE)
   }
 
-  if (length(unique(tmpdata$anchor)) < 2) {
+  if (length(unique(tmpdata$anchor)) < 2L) {
     stop(
       "`anchor` must contain both 0 and 1 values after removing missing data.",
       call. = FALSE
@@ -235,7 +253,7 @@ mic_iapm <- function(
     stop("`mypred` must have non-zero variance.", call. = FALSE)
   }
 
-  if (verbose) {
+  if (isTRUE(verbose)) {
     message("Working on predictor `", mypred, "` and anchor `", anchor, "`.")
   }
 
@@ -260,8 +278,8 @@ mic_iapm <- function(
       )
     }
 
-    C <- as.vector(coefs[1])
-    B <- as.vector(coefs[2])
+    C <- as.vector(coefs[1L])
+    B <- as.vector(coefs[2L])
 
     if (!is.finite(B) || abs(B) < .Machine$double.eps) {
       stop(
@@ -315,9 +333,9 @@ mic_iapm <- function(
     }
 
     list(
-      mic_pm = mic_pm,
-      mic_apm = mic_apm,
-      mic_iapm = mic_iapm_value
+      mic_pm = as.numeric(mic_pm),
+      mic_apm = as.numeric(mic_apm),
+      mic_iapm = if (!is.null(mic_iapm_value)) as.numeric(mic_iapm_value) else NULL
     )
   }
 
@@ -334,7 +352,7 @@ mic_iapm <- function(
   # Bootstrap CIs
   # -------------------------------------------------------------------------
 
-  if (nboot >= 100) {
+  if (nboot >= 100L) {
 
     if (!is.null(seed)) {
 
@@ -363,12 +381,19 @@ mic_iapm <- function(
       }, add = TRUE)
     }
 
-    apm_ci <- numeric(nboot)
-    attempts <- 0
+    boot_pm <- numeric(nboot)
+    boot_apm <- numeric(nboot)
+    boot_iapm <- if (!is.null(rel_anchor_value)) numeric(nboot) else NULL
+
+    attempts <- 0L
+
+    if (isTRUE(verbose)) {
+      message("Starting bootstrap with nboot = ", nboot, ".")
+    }
 
     while (n_successful_boot < nboot && attempts < max_attempts) {
 
-      attempts <- attempts + 1
+      attempts <- attempts + 1L
 
       sample_indices <- sample(
         seq_len(nrow(tmpdata)),
@@ -377,7 +402,7 @@ mic_iapm <- function(
 
       boot_data <- tmpdata[sample_indices, , drop = FALSE]
 
-      if (length(unique(boot_data$anchor)) < 2) {
+      if (length(unique(boot_data$anchor)) < 2L) {
         next
       }
 
@@ -397,20 +422,26 @@ mic_iapm <- function(
         next
       }
 
-      if (!is.null(rel_anchor_value)) {
-        mic_adj <- boot_estimate$mic_iapm
-      } else {
-        mic_adj <- boot_estimate$mic_apm
-      }
-
-      if (!is.finite(mic_adj)) {
+      if (!is.finite(boot_estimate$mic_pm) ||
+          !is.finite(boot_estimate$mic_apm)) {
         next
       }
 
-      n_successful_boot <- n_successful_boot + 1
-      apm_ci[n_successful_boot] <- mic_adj
+      if (!is.null(rel_anchor_value) &&
+          !is.finite(boot_estimate$mic_iapm)) {
+        next
+      }
 
-      if (verbose && n_successful_boot %% report_every == 0) {
+      n_successful_boot <- n_successful_boot + 1L
+
+      boot_pm[n_successful_boot] <- boot_estimate$mic_pm
+      boot_apm[n_successful_boot] <- boot_estimate$mic_apm
+
+      if (!is.null(rel_anchor_value)) {
+        boot_iapm[n_successful_boot] <- boot_estimate$mic_iapm
+      }
+
+      if (isTRUE(verbose) && n_successful_boot %% report_every == 0L) {
         message(
           "Successfully simulated ",
           n_successful_boot,
@@ -420,7 +451,6 @@ mic_iapm <- function(
     }
 
     if (n_successful_boot < nboot) {
-
       warning(
         "Only ",
         n_successful_boot,
@@ -429,11 +459,16 @@ mic_iapm <- function(
         " attempts.",
         call. = FALSE
       )
-
-      apm_ci <- apm_ci[seq_len(n_successful_boot)]
     }
 
-    if (n_successful_boot > 0) {
+    if (n_successful_boot > 0L) {
+
+      boot_pm <- boot_pm[seq_len(n_successful_boot)]
+      boot_apm <- boot_apm[seq_len(n_successful_boot)]
+
+      if (!is.null(rel_anchor_value)) {
+        boot_iapm <- boot_iapm[seq_len(n_successful_boot)]
+      }
 
       cl <- function(x) {
         qu <- unname(
@@ -443,22 +478,60 @@ mic_iapm <- function(
             na.rm = TRUE
           )
         )
-        c(lower = qu[1], upper = qu[2])
+
+        c(
+          lower = qu[1L],
+          upper = qu[2L]
+        )
       }
 
-      mic_ci <- cl(apm_ci)
+      mic_pm_ci <- c(
+        mic = mic_pm,
+        cl(boot_pm)
+      )
+
+      mic_apm_ci <- c(
+        mic = mic_apm,
+        cl(boot_apm)
+      )
 
       if (!is.null(rel_anchor_value)) {
-        mic_adj_ci <- c(mic = mic_iapm_value, mic_ci)
+        mic_iapm_ci <- c(
+          mic = mic_iapm_value,
+          cl(boot_iapm)
+        )
+      }
+
+      if (!is.null(rel_anchor_value)) {
+
+        mic_ci <- rbind(
+          mic_pm = mic_pm_ci,
+          mic_apm = mic_apm_ci,
+          mic_iapm = mic_iapm_ci
+        )
+
       } else {
-        mic_adj_ci <- c(mic = mic_apm, mic_ci)
+
+        mic_ci <- rbind(
+          mic_pm = mic_pm_ci,
+          mic_apm = mic_apm_ci
+        )
       }
 
     } else {
 
+      mic_pm_ci <- NULL
+      mic_apm_ci <- NULL
+      mic_iapm_ci <- NULL
       mic_ci <- NULL
-      mic_adj_ci <- NULL
     }
+
+  } else if (nboot > 0L && nboot < 100L) {
+
+    message(
+      "Bootstrap CI not computed because `nboot < 100`. ",
+      "Set `nboot >= 100` to request bootstrapping."
+    )
   }
 
   # -------------------------------------------------------------------------
@@ -470,8 +543,10 @@ mic_iapm <- function(
     mic_apm = mic_apm,
     mic_iapm = mic_iapm_value,
     anchor_reliability = rel_anchor_value,
-    boot_CI = mic_ci,
-    mic_ci = mic_adj_ci,
+    mic_pm_ci = mic_pm_ci,
+    mic_apm_ci = mic_apm_ci,
+    mic_iapm_ci = mic_iapm_ci,
+    mic_ci = mic_ci,
     nboot = nboot,
     n_successful_boot = n_successful_boot
   )
@@ -497,14 +572,12 @@ get_anchor_reliability <- function(x) {
     return(NULL)
   }
 
-  # Numeric reliability supplied directly
   if (is.numeric(x) && length(x) == 1L) {
 
     rel <- as.numeric(x)
 
   } else if (inherits(x, "tr_reliability")) {
 
-    # Object returned by tr_reliability()
     if (!is.null(x$rel_anchor)) {
       rel <- as.numeric(x$rel_anchor)
     } else if (!is.null(x$reliability)) {
@@ -519,7 +592,6 @@ get_anchor_reliability <- function(x) {
 
   } else if (is.list(x)) {
 
-    # Generic list fallback
     if (!is.null(x$rel_anchor)) {
       rel <- as.numeric(x$rel_anchor)
     } else if (!is.null(x$reliability)) {
