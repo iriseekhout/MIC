@@ -37,6 +37,12 @@
 #'   truth / diagnostic quantities, and optionally latent variables and item
 #'   parameters.
 #'
+#' @examples
+#' sim <- simdat(N = 200, seed = 123, add_change = TRUE)
+#'
+#' names(sim$datw)
+#' sim$truth
+#'
 #' @export
 simdat <- function(
     N = 2000,
