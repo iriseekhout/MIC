@@ -85,7 +85,7 @@ mic_iapm(
   mypred = "change",
   anchor = "trat",
   mydata = dat,
-  anchor_reliability = sim$truth$empirical_rel_trt,
+  anchor_reliability = sim$truth$observed_rel_trt,
   nboot = 0
 )
 }

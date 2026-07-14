@@ -17,7 +17,7 @@ test_that("mic_iapm returns MIC estimates", {
     mypred = "change",
     anchor = "trat",
     mydata = sim$datw,
-    anchor_reliability = sim$truth$empirical_rel_trt,
+    anchor_reliability = sim$truth$observed_rel_trt,
     nboot = 0
   )
 
