@@ -2,7 +2,7 @@
 % Please edit documentation in R/mic_lcfa.R
 \name{mic_lcfa}
 \alias{mic_lcfa}
-\title{Estimate present-state bias and anchor-based MIC using longitudinal CFA}
+\title{Estimate Present-State Bias and Anchor-Based MIC Using Longitudinal CFA}
 \usage{
 mic_lcfa(
   mydat,
@@ -14,11 +14,10 @@ mic_lcfa(
   t1_suffix = NULL,
   t2_suffix = NULL,
   min_resp = 5L,
-  shift_to_one = TRUE,
-  shift_back = FALSE,
   B = 0L,
   report_every = 100L,
   N_ets = 5000L,
+  score_method = c("irt", "cfa", "both"),
   return_prepared = FALSE,
   print_model = TRUE,
   verbose = TRUE
@@ -28,21 +27,24 @@ mic_lcfa(
 \item{mydat}{Data frame containing paired Time 1 and Time 2 PROM items and
 one transition rating variable.}
 
-\item{trt}{Character. Name of the transition rating variable. If \code{NULL},
-the final column of \code{mydat} is used.}
+\item{trt}{Character. Name of the transition rating variable. If \code{NULL}, the
+final column of \code{mydat} is used.}
 
 \item{model}{Optional lavaan model syntax. If \code{NULL}, the model is generated
 automatically using \code{lcfa_model()}.}
 
-\item{trt_cut}{Cutpoint used to dichotomize the transition rating variable
-when it has more than two observed values. Values >= \code{trt_cut} are coded 1.}
+\item{trt_cut}{Numeric. Cutpoint used to dichotomize the transition rating
+variable when it has more than two observed values. Values greater than or
+equal to \code{trt_cut} are coded as 1, and lower values are coded as 0. If the
+transition rating is already binary, the larger value is coded as 1 and
+\code{trt_cut} is ignored.}
 
 \item{auto_equalize}{Logical. If \code{TRUE}, item levels are equalized using
 \code{equalize_levels()}.}
 
-\item{pair_by}{Pairing method passed to \code{equalize_levels()} and \code{lcfa_model()}.
-\code{"position"} assumes Time 1 items followed by Time 2 items. \code{"suffix"}
-detects pairs using \code{t1_suffix} and \code{t2_suffix}.}
+\item{pair_by}{Character. Pairing method passed to \code{equalize_levels()} and
+\code{lcfa_model()}. \code{"position"} assumes Time 1 items followed by Time 2
+items. \code{"suffix"} detects pairs using \code{t1_suffix} and \code{t2_suffix}.}
 
 \item{t1_suffix}{Regex suffix identifying Time 1 items when
 \code{pair_by = "suffix"}.}
@@ -50,60 +52,106 @@ detects pairs using \code{t1_suffix} and \code{t2_suffix}.}
 \item{t2_suffix}{Regex suffix identifying Time 2 items when
 \code{pair_by = "suffix"}.}
 
-\item{min_resp}{Minimum number of responses required in each response
-category before collapsing.}
+\item{min_resp}{Integer. Minimum number of responses required in each
+response category before collapsing.}
 
-\item{shift_to_one}{Passed to \code{equalize_levels()}.}
+\item{B}{Integer. Number of bootstrap samples. Bootstrap confidence
+intervals are computed only if \code{B >= 100}.}
 
-\item{shift_back}{Passed to \code{equalize_levels()}.}
+\item{report_every}{Integer. Progress message interval during bootstrapping.}
 
-\item{B}{Integer. Number of bootstrap samples. Bootstrap CI is computed only if
-\code{B > 100}.}
+\item{N_ets}{Integer. Number of simulated theta values used for the IRT
+expected test score calculation. This argument is not used by the
+closed-form CFA method.}
 
-\item{report_every}{Progress message interval during bootstrapping.}
+\item{score_method}{Character. Method used to map the latent MIC to the
+observed PROM score metric. Options are \code{"irt"}, \code{"cfa"}, and \code{"both"}.
+\code{"irt"} uses \code{mirt::expected.test()}, \code{"cfa"} uses the closed-form
+CFA/probit expected-score method, and \code{"both"} returns both mappings.}
 
-\item{N_ets}{Number of simulated theta values used for expected test score
-calculation.}
-
-\item{return_prepared}{Logical. If \code{TRUE}, returns prepared data, model, fit,
-and bootstrap details.}
+\item{return_prepared}{Logical. If \code{TRUE}, returns prepared data, generated
+model, fitted LCFA object, and bootstrap details.}
 
 \item{print_model}{Logical. If \code{TRUE}, prints the generated lavaan model.}
 
 \item{verbose}{Logical. If \code{TRUE}, prints progress messages.}
 }
 \value{
-A \code{mic_lcfa} object.
+A \code{mic_lcfa} object with elements including:
+\itemize{
+\item \code{psb}: estimated present-state bias;
+\item \code{MIC.theta}: MIC on the latent-change scale;
+\item \code{MIC.ets}: MIC on the observed PROM summed-score metric;
+\item \code{MIC.ets.irt}: IRT-based expected-score MIC, if requested;
+\item \code{MIC.ets.cfa}: CFA-based expected-score MIC, if requested;
+\item \code{MIC_CI}: bootstrap confidence interval, if requested;
+\item \code{nboot}: number of successful bootstrap estimates.
+}
+
+If \code{return_prepared = TRUE}, the returned object also contains the prepared
+data, generated lavaan model, fitted LCFA object, and bootstrap values.
 }
 \description{
-\code{mic_lcfa()} estimates:
+\code{mic_lcfa()} estimates present-state bias and anchor-based minimal important
+change (MIC) using a longitudinal confirmatory factor analysis (LCFA) model.
 }
 \details{
+The input data should contain paired Time 1 and Time 2 PROM items plus one
+transition rating variable. Item pairs may be identified by column position
+or by suffixes. By default, paired item levels are first equalized using
+\code{equalize_levels()}, and lavaan syntax is generated using \code{lcfa_model()}.
+
+The LCFA model estimates the MIC on the latent-change scale. This latent MIC
+is then mapped onto the observed PROM summed-score metric using an expected
+score function.
+
+The LCFA model uses both Time 1 and Time 2 item responses, together with the
+transition rating, to estimate the latent MIC and present-state bias. The
+latent MIC is then mapped onto the observed PROM summed-score metric.
+
 \enumerate{
-\item present-state bias in transition ratings, and
-\item anchor-based minimal important change (MIC)
+\item at the baseline latent trait distribution, \code{theta ~ N(0, 1)};
+\item at the shifted latent trait distribution,
+\code{theta ~ N(MIC.theta, 1)}.
 }
 
-using an unconstrained longitudinal confirmatory factor analysis model.
+Two expected-score mappings are available through \code{score_method}:
 
-The input data should contain paired Time 1 and Time 2 PROM items plus one
-transition rating variable. Item pairs may be identified by position or by
-suffixes. By default, paired item levels are first equalized using
-\code{equalize_levels()}, and the lavaan syntax is generated using \code{lcfa_model()}.
+\itemize{
+\item \code{"irt"} uses an IRT-based expected test score method via
+\code{mirt::expected.test()}. This follows the published implementation of
+Terluin et al. (2024).
+\item \code{"cfa"} uses a closed-form CFA probit expected-score method based on
+lavaan-estimated item loadings and thresholds. For each item, the method
+computes marginal category probabilities under \code{theta ~ N(mu, 1)}, first
+with \code{mu = 0} and then with \code{mu = MIC.theta}. These probabilities are used
+to obtain expected item scores, which are summed across items to obtain the
+expected PROM score.
+\item \code{"both"} computes expected scores using both irt and cfa methods
+}
 
-This implementation follows the updated recommendation that the transition
-rating loadings should be freely estimated; that is, the constraint
-\code{f1 == -f2} is not applied.
+Under the CFA probit method, the closed-form marginal cumulative probability
+for item threshold \code{tau_k} is based on the latent response model
+\verb{Y* = lambda * theta + error}. If \code{theta ~ N(mu, 1)} and
+\code{error ~ N(0, 1)}, then \code{Y* ~ N(lambda * mu, lambda^2 + 1)}. Therefore,
+marginal category probabilities can be computed without simulating theta
+values or fitting an additional IRT model.
 }
 \examples{
 \dontrun{
-sim <- simdat(N = 500, seed = 123)
+# Minimal working example
+sim <- simdat(N = 500, seed = 123, add_change = TRUE)
 dat <- sim$datw
 
-out <- mic_lcfa(
-  mydat = dat[, c(sim$item_names$t1_items,
-                  sim$item_names$t2_items,
-                  "trat")],
+mydat <- dat[, c(
+  sim$item_names$t1_items,
+  sim$item_names$t2_items,
+  "trat"
+)]
+
+# Compare IRT and CFA mappings
+out_both <- mic_lcfa(
+  mydat = mydat,
   trt = "trat",
   trt_cut = 1,
   auto_equalize = TRUE,
@@ -111,17 +159,40 @@ out <- mic_lcfa(
   t1_suffix = "",
   t2_suffix = "\\\\.1",
   min_resp = 5,
+  score_method = "both",
   B = 0,
   print_model = FALSE,
-  verbose = FALSE
-)
+  verbose = FALSE)
 
-out
+out_both$MIC.ets
+
+# Bootstrap confidence interval using the faster CFA mapping
+out_boot <- mic_lcfa(
+  mydat = mydat,
+  trt = "trat",
+  trt_cut = 1,
+  auto_equalize = TRUE,
+  pair_by = "suffix",
+  t1_suffix = "",
+  t2_suffix = "\\\\.1",
+  min_resp = 5,
+  score_method = "cfa",
+  B = 200,
+  report_every = 50,
+  print_model = FALSE,
+  verbose = TRUE)
+
+out_boot
 }
 
 }
 \references{
-Terluin, B., Fromy, P., Trigg, A., Terwee, C.B., & Bjorner, J.B.
+Terluin B, Trigg A, Fromy P, Schuller W, Terwee CB, Bjorner JB.
+Estimating anchor-based minimal important change using longitudinal
+confirmatory factor analysis. Qual Life Res. 2024;33:963-973.
+doi:10.1007/s11136-023-03577-w
+
+Terluin B, Fromy P, Trigg A, Terwee CB, Bjorner JB.
 Effect of present state bias on minimal important change estimates:
 a simulation study. Quality of Life Research. 2024.
 doi:10.1007/s11136-024-03763-4
@@ -130,9 +201,7 @@ Terluin B, Griffiths P, Trigg A, Terwee CB, Bjorner JB.
 Present state bias in transition ratings was accurately estimated in
 simulated and real data. J Clin Epidemiol. 2022;143:128-136.
 doi:10.1016/j.jclinepi.2021.12.024
-
-Terluin B, Trigg A, Fromy P, Schuller W, Terwee CB, Bjorner JB.
-Estimating anchor-based minimal important change using longitudinal
-confirmatory factor analysis. Qual Life Res. 2024;33:963-973.
-doi:10.1007/s11136-023-03577-w
+}
+\seealso{
+\code{\link[=lcfa_model]{lcfa_model()}}, \code{\link[=equalize_levels]{equalize_levels()}}, \code{\link[=simdat]{simdat()}}
 }
