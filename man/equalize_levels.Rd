@@ -2,7 +2,7 @@
 % Please edit documentation in R/equalize_levels.R
 \name{equalize_levels}
 \alias{equalize_levels}
-\title{Equalize paired item response levels}
+\title{Equalize Paired Item Response Levels}
 \usage{
 equalize_levels(
   data,
@@ -10,8 +10,6 @@ equalize_levels(
   t1_suffix = NULL,
   t2_suffix = NULL,
   min_resp = 5L,
-  shift_to_one = TRUE,
-  shift_back = FALSE,
   verbose = TRUE,
   print_tables = TRUE
 )
@@ -31,14 +29,8 @@ item pairs using \code{t1_suffix} and \code{t2_suffix}.}
 \code{pair_by = "suffix"}.}
 
 \item{min_resp}{Integer. Minimum number of responses required in each
-response category at both time-points. Categories with fewer responses
-are collapsed.}
-
-\item{shift_to_one}{Logical. If \code{TRUE}, globally shifts item scores so that
-the minimum observed item response is 1 before collapsing.}
-
-\item{shift_back}{Logical. If \code{TRUE}, reverses the global shift after
-collapsing. Only relevant when \code{shift_to_one = TRUE}.}
+response category at both time points. Categories with fewer responses are
+collapsed.}
 
 \item{verbose}{Logical. If \code{TRUE}, prints progress messages.}
 
@@ -49,7 +41,6 @@ only for item pairs that required collapsing or equalization.}
 A list with components:
 \describe{
 \item{data}{The processed data frame, ordered as T1 items followed by T2 items.}
-\item{shift}{The global shift applied to item responses.}
 \item{pair_map}{A data frame describing matched T1/T2 item pairs.}
 \item{collapsed_items}{A data frame listing item pairs that required collapsing/equalization.}
 \item{before_tables}{Frequency tables before collapsing for affected item pairs.}
@@ -61,11 +52,13 @@ A list with components:
 \description{
 \code{equalize_levels()} prepares paired Time 1 and Time 2 PROM items for
 longitudinal CFA by ensuring that each item has the same observed response
-levels at both time-points. Sparse or mismatched response categories are
+levels at both time points. Sparse or mismatched response categories are
 collapsed consistently within each item pair.
 }
 \details{
 Item pairs can be detected either by column position or by suffix patterns.
+The function does not shift or rescale item scores; it only collapses and
+equalizes response levels within paired items.
 }
 \examples{
 dat <- data.frame(
@@ -81,8 +74,8 @@ out <- equalize_levels(
   t1_suffix = "",
   t2_suffix = "\\\\.1",
   min_resp = 2,
-  shift_to_one = FALSE,
   verbose = FALSE,
   print_tables = FALSE
 )
+
 }
