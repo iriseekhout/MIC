@@ -2,7 +2,7 @@
 % Please edit documentation in R/simdat.R
 \name{simdat}
 \alias{simdat}
-\title{Simulate longitudinal PROM data and a binary anchor}
+\title{Simulate Longitudinal PROM Data and a Binary Anchor}
 \usage{
 simdat(
   N = 2000,
@@ -35,8 +35,8 @@ change.}
 
 \item{sd_tetch}{Numeric. Standard deviation of latent change.}
 
-\item{rel_trt}{Numeric. Reliability of perceived change used to generate
-the binary anchor / transition rating.}
+\item{rel_trt}{Numeric. Target reliability of perceived change used to
+generate the binary anchor / transition rating.}
 
 \item{seed}{Optional integer. Random seed used to make the simulated data
 reproducible. If \code{NULL}, the current random-number generator state is used.}
@@ -48,9 +48,18 @@ parameters in the output object.}
 to the returned data frame. Defaults to \code{FALSE}.}
 }
 \value{
-A list containing the simulated data, simulation settings, item names,
-truth / diagnostic quantities, and optionally latent variables and item
-parameters.
+A list containing:
+\describe{
+\item{seed}{The random seed used.}
+\item{settings}{Simulation settings.}
+\item{item_names}{Names of Time 1 items, Time 2 items, and anchor.}
+\item{truth}{Truth / diagnostic quantities, including \code{target_rel_trt}
+and \code{observed_rel_trt}.}
+\item{datw}{The simulated wide-format data frame.}
+}
+
+If \code{return_latent = TRUE}, the output also includes item parameters,
+latent variables, perceived change, and individual MICs.
 }
 \description{
 \code{simdat()} simulates Time 1 and Time 2 item responses for a 10-item PROM

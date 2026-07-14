@@ -1,4 +1,4 @@
-#' Simulate longitudinal PROM data and a binary anchor
+#' Simulate Longitudinal PROM Data and a Binary Anchor
 #'
 #' `simdat()` simulates Time 1 and Time 2 item responses for a 10-item PROM
 #' and a binary anchor / transition rating from an item response theory context.
@@ -24,8 +24,8 @@
 #'   change.
 #' @param mean_tetch Numeric. Mean latent change.
 #' @param sd_tetch Numeric. Standard deviation of latent change.
-#' @param rel_trt Numeric. Reliability of perceived change used to generate
-#'   the binary anchor / transition rating.
+#' @param rel_trt Numeric. Target reliability of perceived change used to
+#'   generate the binary anchor / transition rating.
 #' @param seed Optional integer. Random seed used to make the simulated data
 #'   reproducible. If `NULL`, the current random-number generator state is used.
 #' @param return_latent Logical. If `TRUE`, returns latent variables and item
@@ -33,9 +33,18 @@
 #' @param add_change Logical. If `TRUE`, adds `change = score_t2 - score_t1`
 #'   to the returned data frame. Defaults to `FALSE`.
 #'
-#' @return A list containing the simulated data, simulation settings, item names,
-#'   truth / diagnostic quantities, and optionally latent variables and item
-#'   parameters.
+#' @return A list containing:
+#' \describe{
+#'   \item{seed}{The random seed used.}
+#'   \item{settings}{Simulation settings.}
+#'   \item{item_names}{Names of Time 1 items, Time 2 items, and anchor.}
+#'   \item{truth}{Truth / diagnostic quantities, including `target_rel_trt`
+#'   and `observed_rel_trt`.}
+#'   \item{datw}{The simulated wide-format data frame.}
+#' }
+#'
+#' If `return_latent = TRUE`, the output also includes item parameters,
+#' latent variables, perceived change, and individual MICs.
 #'
 #' @examples
 #' sim <- simdat(N = 200, seed = 123, add_change = TRUE)
@@ -63,12 +72,19 @@ simdat <- function(
 
   if (!is.null(seed)) {
 
-    if (!is.numeric(seed) || length(seed) != 1L || is.na(seed) ||
-        !is.finite(seed) || seed != floor(seed)) {
+    if (!is.numeric(seed) ||
+        length(seed) != 1L ||
+        is.na(seed) ||
+        !is.finite(seed) ||
+        seed != floor(seed)) {
       stop("`seed` must be NULL or a single integer.", call. = FALSE)
     }
 
-    old_seed_exists <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+    old_seed_exists <- exists(
+      ".Random.seed",
+      envir = .GlobalEnv,
+      inherits = FALSE
+    )
 
     if (old_seed_exists) {
       old_seed <- get(".Random.seed", envir = .GlobalEnv)
@@ -89,24 +105,77 @@ simdat <- function(
   # Argument checks
   # -------------------------------------------------------------------------
 
-  if (!is.numeric(N) || length(N) != 1L || is.na(N) ||
-      !is.finite(N) || N < 1L || N != floor(N)) {
+  if (!is.numeric(N) ||
+      length(N) != 1L ||
+      is.na(N) ||
+      !is.finite(N) ||
+      N < 1L ||
+      N != floor(N)) {
     stop("`N` must be a positive integer.", call. = FALSE)
   }
 
   N <- as.integer(N)
 
-  if (!is.numeric(rel_trt) || length(rel_trt) != 1L ||
-      is.na(rel_trt) || !is.finite(rel_trt) ||
-      rel_trt <= 0 || rel_trt > 1) {
+  if (!is.numeric(mn_imic) ||
+      length(mn_imic) != 1L ||
+      is.na(mn_imic) ||
+      !is.finite(mn_imic)) {
+    stop("`mn_imic` must be a single finite numeric value.", call. = FALSE)
+  }
+
+  if (!is.numeric(sd_imic) ||
+      length(sd_imic) != 1L ||
+      is.na(sd_imic) ||
+      !is.finite(sd_imic) ||
+      sd_imic < 0) {
+    stop("`sd_imic` must be a single non-negative finite numeric value.",
+         call. = FALSE)
+  }
+
+  if (!is.numeric(cor_t1_change) ||
+      length(cor_t1_change) != 1L ||
+      is.na(cor_t1_change) ||
+      !is.finite(cor_t1_change) ||
+      cor_t1_change <= -1 ||
+      cor_t1_change >= 1) {
+    stop("`cor_t1_change` must be a single finite value between -1 and 1.",
+         call. = FALSE)
+  }
+
+  if (!is.numeric(mean_tetch) ||
+      length(mean_tetch) != 1L ||
+      is.na(mean_tetch) ||
+      !is.finite(mean_tetch)) {
+    stop("`mean_tetch` must be a single finite numeric value.", call. = FALSE)
+  }
+
+  if (!is.numeric(sd_tetch) ||
+      length(sd_tetch) != 1L ||
+      is.na(sd_tetch) ||
+      !is.finite(sd_tetch) ||
+      sd_tetch <= 0) {
+    stop("`sd_tetch` must be a single positive finite numeric value.",
+         call. = FALSE)
+  }
+
+  if (!is.numeric(rel_trt) ||
+      length(rel_trt) != 1L ||
+      is.na(rel_trt) ||
+      !is.finite(rel_trt) ||
+      rel_trt <= 0 ||
+      rel_trt > 1) {
     stop("`rel_trt` must be > 0 and <= 1.", call. = FALSE)
   }
 
-  if (!is.logical(return_latent) || length(return_latent) != 1L || is.na(return_latent)) {
+  if (!is.logical(return_latent) ||
+      length(return_latent) != 1L ||
+      is.na(return_latent)) {
     stop("`return_latent` must be either TRUE or FALSE.", call. = FALSE)
   }
 
-  if (!is.logical(add_change) || length(add_change) != 1L || is.na(add_change)) {
+  if (!is.logical(add_change) ||
+      length(add_change) != 1L ||
+      is.na(add_change)) {
     stop("`add_change` must be either TRUE or FALSE.", call. = FALSE)
   }
 
@@ -122,7 +191,12 @@ simdat <- function(
   a1 <- sample(1.7 + b2 / 2)
 
   cf_simb <- as.data.frame(
-    data.frame(a1 = a1, b1 = b1, b2 = b2, b3 = b3)
+    data.frame(
+      a1 = a1,
+      b1 = b1,
+      b2 = b2,
+      b3 = b3
+    )
   )
 
   # Transform b-parameters to d-parameters for mirt.
@@ -144,7 +218,10 @@ simdat <- function(
   # -------------------------------------------------------------------------
 
   Sigma <- matrix(
-    c(1, cor_t1_change, cor_t1_change, 1),
+    c(
+      1, cor_t1_change,
+      cor_t1_change, 1
+    ),
     nrow = 2,
     ncol = 2
   )
@@ -211,7 +288,7 @@ simdat <- function(
   trat <- numeric(N)
   trat[perceived_change > individual_mic] <- 1
 
-  empirical_rel_trt <- stats::var(theta_change) / stats::var(perceived_change)
+  observed_rel_trt <- stats::var(theta_change) / stats::var(perceived_change)
 
   # -------------------------------------------------------------------------
   # Assemble data
@@ -243,7 +320,7 @@ simdat <- function(
 
   truth <- list(
     target_rel_trt = rel_trt,
-    empirical_rel_trt = as.numeric(empirical_rel_trt),
+    observed_rel_trt = as.numeric(observed_rel_trt),
     latent_mic = mn_imic,
     mean_individual_mic = mean(individual_mic),
     sd_individual_mic = stats::sd(individual_mic),
@@ -251,7 +328,10 @@ simdat <- function(
     sd_theta_change = stats::sd(theta_change),
     prop_improved = mean(trat == 1),
     cor_change_anchor = stats::cor(raw_change, trat),
-    cor_theta_t1_theta_t2 = stats::cor(as.vector(theta_t1), as.vector(theta_t2)),
+    cor_theta_t1_theta_t2 = stats::cor(
+      as.vector(theta_t1),
+      as.vector(theta_t2)
+    ),
     cor_theta_change_anchor = stats::cor(theta_change, trat),
     raw_score_range = c(0, 30)
   )
