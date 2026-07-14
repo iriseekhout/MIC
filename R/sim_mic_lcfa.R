@@ -4,7 +4,7 @@
 #' single-item measure (SIM) using longitudinal confirmatory factor analysis
 #' with an auxiliary variable.
 #'
-#' The function implements a Model C-type approach for SIMs. The SIM is measured
+#' The function implements a Model C-type approach (see reference) for SIMs. The SIM is measured
 #' at Time 1 and Time 2, an auxiliary variable is measured at Time 1 and Time 2,
 #' and a transition rating is included as an anchor.
 #'
