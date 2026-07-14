@@ -1,11 +1,13 @@
-#' Equalize paired item response levels
+#' Equalize Paired Item Response Levels
 #'
 #' `equalize_levels()` prepares paired Time 1 and Time 2 PROM items for
 #' longitudinal CFA by ensuring that each item has the same observed response
-#' levels at both time-points. Sparse or mismatched response categories are
+#' levels at both time points. Sparse or mismatched response categories are
 #' collapsed consistently within each item pair.
 #'
 #' Item pairs can be detected either by column position or by suffix patterns.
+#' The function does not shift or rescale item scores; it only collapses and
+#' equalizes response levels within paired items.
 #'
 #' @param data A data frame containing paired item variables. Do not include
 #'   the transition rating variable.
@@ -17,12 +19,8 @@
 #' @param t2_suffix Regex suffix identifying Time 2 items when
 #'   `pair_by = "suffix"`.
 #' @param min_resp Integer. Minimum number of responses required in each
-#'   response category at both time-points. Categories with fewer responses
-#'   are collapsed.
-#' @param shift_to_one Logical. If `TRUE`, globally shifts item scores so that
-#'   the minimum observed item response is 1 before collapsing.
-#' @param shift_back Logical. If `TRUE`, reverses the global shift after
-#'   collapsing. Only relevant when `shift_to_one = TRUE`.
+#'   response category at both time points. Categories with fewer responses are
+#'   collapsed.
 #' @param verbose Logical. If `TRUE`, prints progress messages.
 #' @param print_tables Logical. If `TRUE`, prints before/after frequency tables
 #'   only for item pairs that required collapsing or equalization.
@@ -30,7 +28,6 @@
 #' @return A list with components:
 #' \describe{
 #'   \item{data}{The processed data frame, ordered as T1 items followed by T2 items.}
-#'   \item{shift}{The global shift applied to item responses.}
 #'   \item{pair_map}{A data frame describing matched T1/T2 item pairs.}
 #'   \item{collapsed_items}{A data frame listing item pairs that required collapsing/equalization.}
 #'   \item{before_tables}{Frequency tables before collapsing for affected item pairs.}
@@ -53,10 +50,10 @@
 #'   t1_suffix = "",
 #'   t2_suffix = "\\.1",
 #'   min_resp = 2,
-#'   shift_to_one = FALSE,
 #'   verbose = FALSE,
 #'   print_tables = FALSE
 #' )
+#'
 #' @export
 equalize_levels <- function(
     data,
@@ -64,8 +61,6 @@ equalize_levels <- function(
     t1_suffix = NULL,
     t2_suffix = NULL,
     min_resp = 5L,
-    shift_to_one = TRUE,
-    shift_back = FALSE,
     verbose = TRUE,
     print_tables = TRUE
 ) {
@@ -179,26 +174,22 @@ equalize_levels <- function(
       # Example:
       # Time 1: item1
       # Time 2: item1.1
-      #
-      # User call:
       # t1_suffix = ""
       # t2_suffix = "\\.1"
 
       t2_items <- nm[grepl(t2_pat, nm)]
-      t2_base  <- sub(t2_pat, "", t2_items)
+      t2_base <- sub(t2_pat, "", t2_items)
 
       if (length(t2_items) == 0L) {
         stop("No Time 2 items found using `t2_suffix`.", call. = FALSE)
       }
 
-      # Time 1 candidates are all columns that are not identified as T2.
       t1_items <- setdiff(nm, t2_items)
 
       if (length(t1_items) == 0L) {
         stop("No Time 1 items found.", call. = FALSE)
       }
 
-      # For every T1 item, a corresponding T2 item must exist.
       missing_t2 <- setdiff(t1_items, t2_base)
 
       if (length(missing_t2) > 0L) {
@@ -209,7 +200,6 @@ equalize_levels <- function(
         )
       }
 
-      # For every T2 item, a corresponding T1 item must exist.
       missing_t1 <- setdiff(t2_base, t1_items)
 
       if (length(missing_t1) > 0L) {
@@ -220,7 +210,6 @@ equalize_levels <- function(
         )
       }
 
-      # Preserve Time 1 column order
       t2_items_ordered <- t2_items[match(t1_items, t2_base)]
 
       pair_map <- data.frame(
@@ -235,10 +224,6 @@ equalize_levels <- function(
       # Example:
       # Time 1: item1.t1
       # Time 2: item1.t2
-      #
-      # User call:
-      # t1_suffix = "\\.t1"
-      # t2_suffix = "\\.t2"
 
       t1_items <- nm[grepl(t1_pat, nm)]
       t2_items <- nm[grepl(t2_pat, nm)]
@@ -262,7 +247,6 @@ equalize_levels <- function(
         stop("Duplicate Time 2 base names detected.", call. = FALSE)
       }
 
-      # For every T1 item, a corresponding T2 item must exist.
       missing_t2 <- setdiff(t1_base, t2_base)
 
       if (length(missing_t2) > 0L) {
@@ -273,7 +257,6 @@ equalize_levels <- function(
         )
       }
 
-      # For every T2 item, a corresponding T1 item must exist.
       missing_t1 <- setdiff(t2_base, t1_base)
 
       if (length(missing_t1) > 0L) {
@@ -284,7 +267,6 @@ equalize_levels <- function(
         )
       }
 
-      # Preserve Time 1 column order
       t2_items_ordered <- t2_items[match(t1_base, t2_base)]
 
       pair_map <- data.frame(
@@ -308,25 +290,6 @@ equalize_levels <- function(
   # Internal data always arranged as:
   # T1 items followed by corresponding T2 items
   out <- data[, c(pair_map$t1_item, pair_map$t2_item), drop = FALSE]
-
-  # ---------------------------------------------------------------------------
-  # Optional global shift so minimum observed item response = 1
-  # ---------------------------------------------------------------------------
-
-  global_shift <- 0
-
-  if (isTRUE(shift_to_one)) {
-
-    all_values <- unlist(out, use.names = FALSE)
-    all_values <- all_values[!is.na(all_values)]
-
-    global_min <- min(all_values)
-    global_shift <- 1 - global_min
-
-    if (global_shift != 0) {
-      out[] <- lapply(out, function(x) x + global_shift)
-    }
-  }
 
   # ---------------------------------------------------------------------------
   # Helper functions
@@ -419,7 +382,7 @@ equalize_levels <- function(
         upper <- union_cats[union_cats > cat]
 
         down <- if (length(lower)) max(lower) else NA_real_
-        up   <- if (length(upper)) min(upper) else NA_real_
+        up <- if (length(upper)) min(upper) else NA_real_
 
         # Lower response options are merged upward
         if (cat < center) {
@@ -448,7 +411,7 @@ equalize_levels <- function(
         candidates[which.max(totals)]
       }
 
-      # ---- A. sparse lower tail ----
+      # ---- A. Sparse lower tail ----
       if (either_sparse(mn)) {
         target <- choose_target(mn)
 
@@ -459,7 +422,7 @@ equalize_levels <- function(
         }
       }
 
-      # ---- B. sparse upper tail ----
+      # ---- B. Sparse upper tail ----
       if (either_sparse(mx)) {
         target <- choose_target(mx)
 
@@ -470,7 +433,7 @@ equalize_levels <- function(
         }
       }
 
-      # ---- C. categories present at one time-point only ----
+      # ---- C. Categories present at one time point only ----
       only_t1 <- setdiff(p1, p2)
       only_t2 <- setdiff(p2, p1)
 
@@ -493,7 +456,7 @@ equalize_levels <- function(
         }
       }
 
-      # ---- D. internal sparsity ----
+      # ---- D. Internal sparsity ----
       sparse <- union_cats[vapply(union_cats, either_sparse, logical(1))]
 
       if (length(sparse) > 0L) {
@@ -559,7 +522,7 @@ equalize_levels <- function(
 
   collapsed_items <- pair_map[require_collapse, , drop = FALSE]
 
-  if (nrow(collapsed_items) == 0L) {
+  if (nrow(collapsed_items) == 0L && isTRUE(verbose)) {
     message("No item pairs required collapsing or level equalization.")
   }
 
@@ -568,16 +531,16 @@ equalize_levels <- function(
   # ---------------------------------------------------------------------------
 
   before_tables <- vector("list", sum(require_collapse))
-  after_tables  <- vector("list", sum(require_collapse))
-  mappings      <- vector("list", sum(require_collapse))
+  after_tables <- vector("list", sum(require_collapse))
+  mappings <- vector("list", sum(require_collapse))
 
   if (sum(require_collapse) > 0L) {
 
     affected_idx <- which(require_collapse)
 
     names(before_tables) <- pair_map$base_name[affected_idx]
-    names(after_tables)  <- pair_map$base_name[affected_idx]
-    names(mappings)      <- pair_map$base_name[affected_idx]
+    names(after_tables) <- pair_map$base_name[affected_idx]
+    names(mappings) <- pair_map$base_name[affected_idx]
 
     for (k in seq_along(affected_idx)) {
 
@@ -680,46 +643,6 @@ equalize_levels <- function(
     )
   }
 
-  # ---------------------------------------------------------------------------
-  # Optional shift back
-  # ---------------------------------------------------------------------------
-
-  if (isTRUE(shift_back) && global_shift != 0) {
-    out[] <- lapply(out, function(x) x - global_shift)
-  }
-
-  # If shift_back is used, refresh after-tables and summary final levels
-  if (isTRUE(shift_back) && global_shift != 0) {
-
-    if (sum(require_collapse) > 0L) {
-
-      affected_idx <- which(require_collapse)
-
-      for (k in seq_along(affected_idx)) {
-
-        i <- affected_idx[k]
-
-        t1_col <- i
-        t2_col <- nitems + i
-
-        after_tables[[k]] <- list(
-          t1 = table(out[[t1_col]], useNA = "ifany"),
-          t2 = table(out[[t2_col]], useNA = "ifany")
-        )
-      }
-    }
-
-    for (i in seq_len(nitems)) {
-
-      t1_col <- i
-      t2_col <- nitems + i
-
-      final_t1_levels <- present(out[[t1_col]])
-
-      summary_list[[i]]$final_levels <- paste(final_t1_levels, collapse = ", ")
-    }
-  }
-
   if (sum(require_collapse) > 0L && isTRUE(print_tables)) {
     print_level_tables(after_tables, "AFTER COLLAPSE")
   }
@@ -730,13 +653,8 @@ equalize_levels <- function(
   # Return
   # ---------------------------------------------------------------------------
 
-  # ---------------------------------------------------------------------------
-  # Return
-  # ---------------------------------------------------------------------------
-
   list(
     data = out,
-    shift = global_shift,
     pair_map = pair_map,
     collapsed_items = collapsed_items,
     before_tables = before_tables,
@@ -745,4 +663,3 @@ equalize_levels <- function(
     summary = summary_df
   )
 }
-
