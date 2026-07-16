@@ -1,6 +1,6 @@
-Package: MIC
+Package: MiCT
 Type: Package
-Title: Estimation of Minimal Important Change and Interpretation Thresholds
+Title: Minimal Important Change and Threshold Estimation
 Version: 2.0.0
 Authors@R: c(
     person(
@@ -23,13 +23,22 @@ Authors@R: c(
         email = "gmspuyh@duke-nus.edu.sg"
     )
     )
-Description: Provides functions to estimate minimal important change and
-    interpretation thresholds using anchor-based methods. Methods include
-    ROC analysis, predictive modeling, adjusted predictive modeling, improved
-    adjusted predictive modeling using anchor reliability, confirmatory factor
-    analysis for anchor reliability, longitudinal confirmatory factor analysis
-    for minimal important change, and CFA-based thresholds for single-item and
-    multi-item measures.
+Description: Provides methods for estimating minimal important change (MIC)
+    and meaningful or interpretation thresholds for patient-reported outcome
+    measures. Methods include receiver operating characteristic analysis,
+    predictive modelling, adjusted predictive modelling, improved adjusted
+    predictive modelling using anchor reliability, confirmatory factor analysis
+    for anchor reliability, longitudinal confirmatory factor analysis for MIC
+    estimation, LCFA-based MIC estimation for single-item measures, and
+    CFA-based threshold estimation for single-item and multi-item measures.
+    Implemented methods include those described by Terluin et al. (2015)
+    <doi:10.1016/j.jclinepi.2015.03.015>, Terluin et al. (2017)
+    <doi:10.1016/j.jclinepi.2016.12.015>, Terluin et al. (2022)
+    <doi:10.1016/j.jclinepi.2022.04.018>, Terluin et al. (2024)
+    <doi:10.1007/s11136-023-03577-w>, Terluin et al. (2024)
+    <doi:10.1007/s11136-024-03763-4>, Terluin et al. (2026)
+    <doi:10.1007/s11136-025-04134-3>, and Terluin et al. (2023)
+    <doi:10.1007/s11136-023-03355-8>.
 Depends:
     R (>= 4.1.0)
 License: file LICENSE
@@ -45,5 +54,5 @@ Imports:
 Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
-URL: https://github.com/iriseekhout/MIC
-BugReports: https://github.com/iriseekhout/MIC/issues
+URL: https://github.com/yhpua/MiCT, https://yhpua.github.io/MiCT/
+BugReports: https://github.com/yhpua/MiCT/issues

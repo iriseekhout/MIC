@@ -7,8 +7,8 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(MIC)
+library(MiCT)
 
-test_check("MIC")
+test_check("MiCT")
 
 
