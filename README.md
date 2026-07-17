@@ -1,5 +1,5 @@
-# MIC
-Minimal Important Change and Interpretation Threshold calculations
+# MiCT man/figures/logo.png
 
-A detailed demonstration of the `MIC` package will be available at:
-https://yhpua.github.io/MIC_demo/
+## Minimal Important Change and Threshold Estimation
+
+`MiCT` provides tools for estimating minimal important change (MIC) and interpretation thresholds for patient-reported outcome measures, including multi-item questionnaires and single-item continuous or ordinal measures.
