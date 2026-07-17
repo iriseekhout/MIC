@@ -1,6 +1,9 @@
-# MiCT
+<p align="center">
+  man/figures/logo.png
+</p>
 
-man/figures/logo.png
+
+# MiCT
 
 ## Minimal Important Change and Threshold Estimation
 
