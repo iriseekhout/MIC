@@ -5,3 +5,4 @@
 ^archive$
 ^markdown$
 ^inst$
+^cran-comments\.md$
