@@ -16,14 +16,28 @@
 #' @importFrom stats cor coef sd glm
 #'
 #' @return vector with the adjusted MIC value
-#' @export
+#'
+#' @details
+#' `mic_adjust()` is a focused function for estimating the adjusted
+#' predictive modeling-based MIC. For an all-in-one workflow that returns the
+#' predictive MIC, adjusted predictive MIC, and improved adjusted predictive MIC
+#' with optional bootstrap confidence intervals, see [mic_iapm()].
+#'
+#' @seealso [mic_iapm()], [tr_reliability()]
+#'
 #'
 #' @examples
+#' data(example)
 #' nitems <- 10
 #' example$x <- rowSums(example[,1:nitems])                 # sumscore T1
 #' example$y <- rowSums(example[,(nitems+1):(2*nitems)])    # sumscore T2
 #' mic_adjust(x = example$x, y = example$y, tr = example$trat, reliability = 0.5)
 #' mic_adjust(data = example, x = "x", y = "y", tr = "trat", reliability = 0.5)
+#'
+#'
+#' # For predictive, adjusted, and improved adjusted MICs in one workflow,
+#' # see mic_iapm().
+#' @export
 mic_adjust <- function(data = NULL, x, y , tr, reliability){
 
   if(!is.null(data) & !is.character(x) & !is.character(y) & !is.character(tr)){

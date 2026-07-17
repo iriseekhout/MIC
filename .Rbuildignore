@@ -1,5 +1,8 @@
-^MIC\.Rproj$
+^MiCT\.Rproj$
 ^\.Rproj\.user$
 ^data-raw
-^markdown
 ^scripts
+^archive$
+^markdown$
+^inst$
+^cran-comments\.md$

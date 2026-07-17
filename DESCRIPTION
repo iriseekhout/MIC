@@ -1,37 +1,58 @@
-Package: MIC
+Package: MiCT
 Type: Package
-Title: Minimal Important Change
-Date: 2021-08-03
-Version: 1.0.0
-Authors@R: 
-    c(person(given = "Iris",
-           family = "Eekhout",
-           role = c("aut"),
-           email = "iris.eekhout@tno.nl"),
-           person(given = "Berend",
-           family = "Terluin",
-           role = c("aut"),
-           email = "berend@terluin.net"),
-           person(given = "Yong Hao",
-           family = "Pua",
-           role = c("aut", "cre"),
-           email = "puayonghao@gmail.com")
-           )
-Description: Estimate the Minimal Important Change via different methodologies.
-Depends: R (>= 3.5.0)
+Title: Minimal Important Change and Threshold Estimation
+Version: 2.0.0
+Authors@R: c(
+    person(
+        given = "Iris",
+        family = "Eekhout",
+        role = "aut",
+        email = "iris.eekhout@tno.nl",
+        comment = "Original package author"
+    ),
+    person(
+        given = "Berend",
+        family = "Terluin",
+        role = "aut",
+        email = "berend@terluin.net"
+    ),
+    person(
+        given = "Yong Hao",
+        family = "Pua",
+        role = c("aut", "cre"),
+        email = "gmspuyh@duke-nus.edu.sg"
+    )
+    )
+Description: Provides methods for estimating minimal important change (MIC)
+    and interpretation thresholds for patient-reported outcome
+    measures, including multi-item questionnaires and single-item continuous or ordinal measures.
+    Methods include predictive modelling, adjusted predictive modelling, improved adjusted
+    predictive modelling using anchor reliability, confirmatory factor analysis
+    for anchor reliability, longitudinal confirmatory factor analysis for MIC
+    estimation, LCFA-based MIC estimation for single-item measures, and
+    CFA-based threshold estimation for single-item and multi-item measures.
+    Implemented methods include those described by Terluin et al. (2015)
+    <doi:10.1016/j.jclinepi.2015.03.015>, Terluin et al. (2017)
+    <doi:10.1016/j.jclinepi.2016.12.015>, Terluin et al. (2022)
+    <doi:10.1016/j.jclinepi.2022.04.018>, Terluin et al. (2024)
+    <doi:10.1007/s11136-023-03577-w>, Terluin et al. (2024)
+    <doi:10.1007/s11136-024-03763-4>, Terluin et al. (2026)
+    <doi:10.1007/s11136-025-04134-3>, and Terluin et al. (2023)
+    <doi:10.1007/s11136-023-03355-8>.
+Depends:
+    R (>= 4.1.0)
 License: file LICENSE
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.1
-Imports: 
+RoxygenNote: 7.3.2
+Imports:
     lavaan,
-    pROC,
-    rsample,
-    dplyr,
-    purrr,
-    tidyr,
-    stats,
-    rlang,
     MASS,
-    mirt
+    mirt,
+    pROC
+Suggests:
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+URL: https://github.com/yhpua/MiCT; https://yhpua.github.io/MiCT/
+BugReports: https://github.com/yhpua/MiCT/issues

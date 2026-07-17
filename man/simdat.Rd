@@ -2,44 +2,84 @@
 % Please edit documentation in R/simdat.R
 \name{simdat}
 \alias{simdat}
-\title{Simulates Time 1 and Time 2 PROM items and a transition rating vector from an item response theory context.}
+\title{Simulate Longitudinal PROM Data and a Binary Anchor}
 \usage{
 simdat(
   N = 2000,
-  par.mn.imic = 0.37425,
-  par.sd.imic = 0.05,
-  rt1ch = -0.5,
-  mean.tetchs = 0.3,
-  par.sd.tetchs = 1,
-  par.rel.trt = 0.7
+  mn_imic = 0.37425,
+  sd_imic = 0.05,
+  cor_t1_change = -0.5,
+  mean_tetch = 0.3,
+  sd_tetch = 1,
+  rel_trt = 0.7,
+  seed = 1234,
+  return_latent = TRUE,
+  add_change = FALSE
 )
 }
 \arguments{
-\item{N}{sample size for simulation}
+\item{N}{Integer. Sample size for simulation.}
 
-\item{par.mn.imic}{Numeric vector; mean individual MICs. When 0.37425, corresponds to MIC 2.5 points on the raw scale.}
+\item{mn_imic}{Numeric. Mean individual MIC on the latent theta-change scale.
+For context, \code{mn_imic = 0.5} corresponds approximately to a raw-score MIC
+of about 2.8 points, while \code{mn_imic = 0.37425} corresponds approximately
+to a raw-score MIC of about 2.5 points on the 0-30 PROM scale.}
 
-\item{par.sd.imic}{Numeric vector; sd of individual MICs. Cannot be too large lest MIC is negative}
+\item{sd_imic}{Numeric. Standard deviation of individual MICs on the latent
+theta-change scale.}
 
-\item{rt1ch}{Numeric vector; correlation between tet1s and latent change}
+\item{cor_t1_change}{Numeric. Correlation between baseline theta and latent
+change.}
 
-\item{mean.tetchs}{Numeric vector; mean latent change}
+\item{mean_tetch}{Numeric. Mean latent change.}
 
-\item{par.sd.tetchs}{Numeric vector; standard deviation of \code{tetchs}}
+\item{sd_tetch}{Numeric. Standard deviation of latent change.}
 
-\item{par.rel.trt}{Numeric vector; transition rating reliability}
+\item{rel_trt}{Numeric. Target reliability of perceived change used to
+generate the binary anchor / transition rating.}
+
+\item{seed}{Optional integer. Random seed used to make the simulated data
+reproducible. If \code{NULL}, the current random-number generator state is used.}
+
+\item{return_latent}{Logical. If \code{TRUE}, returns latent variables and item
+parameters in the output object.}
+
+\item{add_change}{Logical. If \code{TRUE}, adds \code{change = score_t2 - score_t1}
+to the returned data frame. Defaults to \code{FALSE}.}
 }
 \value{
-a list of estimates and a dataframe with Time 1 and Time 2 PROM items and a transition rating vector (\code{trat})
+A list containing:
+\describe{
+\item{seed}{The random seed used.}
+\item{settings}{Simulation settings.}
+\item{item_names}{Names of Time 1 items, Time 2 items, and anchor.}
+\item{truth}{Truth / diagnostic quantities, including \code{target_rel_trt}
+and \code{observed_rel_trt}.}
+\item{datw}{The simulated wide-format data frame.}
+}
+
+If \code{return_latent = TRUE}, the output also includes item parameters,
+latent variables, perceived change, and individual MICs.
 }
 \description{
-R codes taken from supplementary materials of Terluin et al Qual Life Res. 2024;33:963–73
+\code{simdat()} simulates Time 1 and Time 2 item responses for a 10-item PROM
+and a binary anchor / transition rating from an item response theory context.
+Each item has four ordered response categories scored 0, 1, 2, and 3, so
+the total PROM score ranges from 0 to 30 at each time point.
+}
+\details{
+The returned data frame includes item-level responses, the binary anchor
+\code{trat}, the Time 1 summed PROM score \code{score_t1}, and the Time 2 summed PROM
+score \code{score_t2}. If \code{add_change = TRUE}, the observed change score
+\code{change = score_t2 - score_t1} is also added.
+
+The R code is adapted from supplementary materials of Terluin et al.
+Qual Life Res. 2024;33:963-973.
 }
 \examples{
-Simulate baseline data-set and change (theta) scores
-generate output
-}
-\seealso{
-Terluin B, Trigg A, Fromy P, Schuller W, Terwee CB, Bjorner JB. Estimating anchor-based minimal
-important change using longitudinal confirmatory factor analysis. Qual Life Res. 2024;33:963–73.
+sim <- simdat(N = 200, seed = 123, add_change = TRUE)
+
+names(sim$datw)
+sim$truth
+
 }

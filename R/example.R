@@ -1,30 +1,74 @@
-#' example
+#' Simulated longitudinal MIC example dataset
 #'
-#' Simulated example data of 10 items measured at two timepoints for 1000 subjects.
+#' A simulated dataset containing responses to a 10-item patient-reported
+#' outcome measure at two time points for 1000 subjects, together with a binary
+#' transition rating anchor.
+#'
+#' Each item has four ordered response categories scored 0, 1, 2, and 3.
+#' Therefore, the summed score at each time point ranges from 0 to 30.
+#'
+#' The Time 1 items are named `v1_1` to `v1_10`, and the Time 2 items are named
+#' `v2_1` to `v2_10`. The variable `trat` is a dichotomous transition rating
+#' indicator coded 0/1.
+#'
+#' This dataset is useful for demonstrating MIC estimation functions such as
+#' `mic_roc()`, `mic_pred()`, `mic_adjust()`, `mic_iapm()`, `tr_reliability()`,
+#' and `mic_lcfa()`.
 #'
 #' @format A data frame with 1000 rows and 21 variables:
 #' \describe{
-#'   \item{v1_1}{item1 at baseline}
-#'   \item{v1_2}{item2 at baseline}
-#'   \item{v1_3}{item3 at baseline}
-#'   \item{v1_4}{item4 at baseline}
-#'   \item{v1_5}{item5 at baseline}
-#'   \item{v1_6}{item6 at baseline}
-#'   \item{v1_7}{item7 at baseline}
-#'   \item{v1_8}{item8 at baseline}
-#'   \item{v1_9}{item9 at baseline}
-#'   \item{v1_10}{item10 at baseline}
-#'   \item{v2_1}{item1 at repeated measurement}
-#'   \item{v2_2}{item2 at repeated measurement}
-#'   \item{v2_3}{item3 at repeated measurement}
-#'   \item{v2_4}{item4 at repeated measurement}
-#'   \item{v2_5}{item5 at repeated measurement}
-#'   \item{v2_6}{item6 at repeated measurement}
-#'   \item{v2_7}{item7 at repeated measurement}
-#'   \item{v2_8}{item8 at repeated measurement}
-#'   \item{v2_9}{item9 at repeated measurement}
-#'   \item{v2_10}{item10 at repeated measurement}
-#'   \item{trat}{transition rating, dichotomous indicator}
+#'   \item{v1_1}{Item 1 at Time 1.}
+#'   \item{v1_2}{Item 2 at Time 1.}
+#'   \item{v1_3}{Item 3 at Time 1.}
+#'   \item{v1_4}{Item 4 at Time 1.}
+#'   \item{v1_5}{Item 5 at Time 1.}
+#'   \item{v1_6}{Item 6 at Time 1.}
+#'   \item{v1_7}{Item 7 at Time 1.}
+#'   \item{v1_8}{Item 8 at Time 1.}
+#'   \item{v1_9}{Item 9 at Time 1.}
+#'   \item{v1_10}{Item 10 at Time 1.}
+#'   \item{v2_1}{Item 1 at Time 2.}
+#'   \item{v2_2}{Item 2 at Time 2.}
+#'   \item{v2_3}{Item 3 at Time 2.}
+#'   \item{v2_4}{Item 4 at Time 2.}
+#'   \item{v2_5}{Item 5 at Time 2.}
+#'   \item{v2_6}{Item 6 at Time 2.}
+#'   \item{v2_7}{Item 7 at Time 2.}
+#'   \item{v2_8}{Item 8 at Time 2.}
+#'   \item{v2_9}{Item 9 at Time 2.}
+#'   \item{v2_10}{Item 10 at Time 2.}
+#'   \item{trat}{Binary transition rating anchor, coded 0/1.}
 #' }
-#' @source data-raw/R/example.R
+#'
+#' @source Simulated example data generated for demonstrating MIC package
+#'   functions. See `data-raw/R/example.R`.
+#'
+#' @seealso
+#' [simdat()] for generating new simulated datasets with user-specified
+#' simulation parameters.
+#'
+#' [mic_roc()], [mic_pred()], [mic_adjust()], and [mic_iapm()] for predictive
+#' modeling and adjusted predictive modeling MIC estimation.
+#'
+#' [tr_reliability()] for estimating transition rating reliability.
+#'
+#' [mic_lcfa()] for LCFA-based MIC estimation.
+#'
+#' @examples
+#' data(example)
+#'
+#' nitems <- 10
+#' example$score_t1 <- rowSums(example[, paste0("v1_", 1:nitems)])
+#' example$score_t2 <- rowSums(example[, paste0("v2_", 1:nitems)])
+#' example$change <- example$score_t2 - example$score_t1
+#'
+#' head(example)
+#'
+#' mic_roc(
+#'   data = example,
+#'   x = "score_t1",
+#'   y = "score_t2",
+#'   tr = "trat",
+#'   nboot = 0
+#' )
 "example"
