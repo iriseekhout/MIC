@@ -24,9 +24,9 @@ Authors@R: c(
     )
     )
 Description: Provides methods for estimating minimal important change (MIC)
-    and meaningful or interpretation thresholds for patient-reported outcome
-    measures. Methods include receiver operating characteristic analysis,
-    predictive modelling, adjusted predictive modelling, improved adjusted
+    and interpretation thresholds for patient-reported outcome
+    measures, including multi-item questionnaires and single-item continuous or ordinal measures.
+    Methods include predictive modelling, adjusted predictive modelling, improved adjusted
     predictive modelling using anchor reliability, confirmatory factor analysis
     for anchor reliability, longitudinal confirmatory factor analysis for MIC
     estimation, LCFA-based MIC estimation for single-item measures, and
@@ -54,5 +54,5 @@ Imports:
 Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
-URL: https://github.com/yhpua/MiCT, https://yhpua.github.io/MiCT/
+URL: https://github.com/yhpua/MiCT
 BugReports: https://github.com/yhpua/MiCT/issues
