@@ -1,5 +1,5 @@
-<p align="center">
-  <img src="man/figures/logo.png" alt="MiCT logo" width="120" />
+<p align="left">
+  <img src="man/figures/logo.png" alt="MiCT logo" width="420" />
 </p>
 
 
